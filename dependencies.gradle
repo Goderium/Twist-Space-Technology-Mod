@@ -65,11 +65,14 @@ dependencies {
     implementation('com.google.auto.value:auto-value-annotations:1.10.1')
     annotationProcessor('com.google.auto.value:auto-value:1.10.1')
     //These 2 deps are for mixin
-//    devOnlyNonPublishable("com.github.GTNewHorizons:Infernal-Mobs:1.9.0-GTNH:dev")
-
     implementation('com.github.GTNewHorizons:BloodMagic:1.6.2:dev')
 
     // dependencies for mod testing
     // using transitive to prevent mod duplication and conflicts
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:BlockRenderer6343:1.2.12:dev") { transitive = false }
+    compileOnlyApi("com.github.GTNewHorizons:EnderIO:2.8.22:dev") { transitive = false }
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:EnderIO:2.8.22:dev')
+    implementation("com.github.GTNewHorizons:Mobs-Info:0.4.6-GTNH:dev")
+    devOnlyNonPublishable("com.github.GTNewHorizons:Infernal-Mobs:1.9.0-GTNH:dev")
+    implementation("com.github.GTNewHorizons:Infernal-Mobs:1.9.0-GTNH:dev")
 }

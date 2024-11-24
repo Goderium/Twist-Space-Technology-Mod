@@ -23,6 +23,8 @@ public class NEI_Config implements IConfigureNEI {
 
     @Override
     public void loadConfig() {
+        // isAdded = false;
+        // new TargetMobHandler();
         isAdded = true;
     }
 

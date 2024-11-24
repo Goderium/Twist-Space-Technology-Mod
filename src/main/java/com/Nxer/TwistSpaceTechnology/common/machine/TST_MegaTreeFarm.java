@@ -3,12 +3,18 @@ package com.Nxer.TwistSpaceTechnology.common.machine;
 import static com.Nxer.TwistSpaceTechnology.common.block.BasicBlocks.MetaBlockCasing01;
 import static com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.AquaticZoneSimulatorFakeRecipe.WatersChances;
 import static com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.AquaticZoneSimulatorFakeRecipe.WatersOutputs;
+import static com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.TargetedCloningFakeRecipe.generateDrops;
 import static com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.TreeGrowthSimulatorWithoutToolFakeRecipe.allProducts;
+import static com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.TreeGrowthSimulatorWithoutToolFakeRecipe.damageModeMap;
+import static com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.TreeGrowthSimulatorWithoutToolFakeRecipe.getModeMultiplier;
+import static com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.TreeGrowthSimulatorWithoutToolFakeRecipe.getTierMultiplier;
+import static com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.TreeGrowthSimulatorWithoutToolFakeRecipe.queryTreeProduct;
 import static com.Nxer.TwistSpaceTechnology.util.TextLocalization.BLUE_PRINT_INFO;
 import static com.Nxer.TwistSpaceTechnology.util.TextLocalization.ModName;
 import static com.Nxer.TwistSpaceTechnology.util.TextLocalization.StructureTooComplex;
 import static com.Nxer.TwistSpaceTechnology.util.TextLocalization.Tooltip_DoNotNeedMaintenance;
 import static com.Nxer.TwistSpaceTechnology.util.TextLocalization.textUseBlueprint;
+import static com.Nxer.TwistSpaceTechnology.util.Utils.getItemStackString;
 import static com.Nxer.TwistSpaceTechnology.util.Utils.metaItemEqual;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofChain;
@@ -19,15 +25,12 @@ import static gregtech.api.enums.HatchElement.InputBus;
 import static gregtech.api.enums.HatchElement.OutputBus;
 import static gregtech.api.util.GTStructureUtility.ofFrame;
 import static gtPlusPlus.xmod.gregtech.common.tileentities.machines.multi.production.MTETreeFarm.Mode;
-import static gtPlusPlus.xmod.gregtech.common.tileentities.machines.multi.production.MTETreeFarm.treeProductsMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 
@@ -37,7 +40,6 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -64,8 +66,6 @@ import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 import com.gtnewhorizon.structurelib.structure.StructureDefinition;
 
 import bartworks.API.BorosilicateGlass;
-import forestry.api.arboriculture.ITree;
-import forestry.api.arboriculture.TreeManager;
 import galaxyspace.BarnardsSystem.BRFluids;
 import gregtech.api.GregTechAPI;
 import gregtech.api.enums.Materials;
@@ -245,8 +245,8 @@ public class TST_MegaTreeFarm extends GTCM_MultiMachineBase<TST_MegaTreeFarm> {
                     StatCollector.translateToLocal("BallLightning.modeMsg.IncompleteStructure"));
                 return;
             }
-            this.mMode = (byte) ((this.mMode + 1) % 2);
-            SetRemoveWater();
+            this.mMode = (byte) ((this.mMode + 1) % 3);
+            // SetRemoveWater();
             GTUtility
                 .sendChatToPlayer(aPlayer, StatCollector.translateToLocal("EcoSphereSimulator.modeMsg." + this.mMode));
             // #tr EcoSphereSimulator.modeMsg.0
@@ -691,35 +691,8 @@ public class TST_MegaTreeFarm extends GTCM_MultiMachineBase<TST_MegaTreeFarm> {
         return false;
     }
 
-    private static int getTierMultiplier(int tier) {
-        return (int) Math
-            .floor(3 * Math.pow(2, 0.1 * (tier - 1) * (8 + Math.log(25 + Math.exp(25 - tier)) / Math.log(5))));
-    }
-
-    /**
-     * Use the highest bonus from the original Recipe.
-     */
-
-    public static int getModeMultiplier(Mode mode) {
-        return switch (mode) {
-            case LOG -> 20;
-            case SAPLING -> 3;
-            case LEAVES -> 8;
-            case FRUIT -> 1;
-        };
-
-    }
-
-    public Map<Integer, Mode> damageModeMap = new HashMap<>();
-    {
-        damageModeMap.put(1, Mode.LOG);
-        damageModeMap.put(2, Mode.SAPLING);
-        damageModeMap.put(3, Mode.LEAVES);
-        damageModeMap.put(4, Mode.FRUIT);
-    }
-
     public int getModeOutput(Mode mode) {
-        for (ItemStack stack : getStoredInputs()) {
+        for (ItemStack stack : this.getStoredInputs()) {
             if (stack.getItem() instanceof ItemIntegratedCircuit && stack.getItemDamage() > 0) {
                 Mode mappedMode = damageModeMap.get(stack.getItemDamage());
                 if (mode == mappedMode) {
@@ -728,79 +701,6 @@ public class TST_MegaTreeFarm extends GTCM_MultiMachineBase<TST_MegaTreeFarm> {
             }
         }
         return -1;
-    }
-
-    public static EnumMap<Mode, ItemStack> queryTreeProduct(ItemStack sapling) {
-        String key = getItemStackString(sapling);
-        EnumMap<Mode, ItemStack> ProductMap = treeProductsMap.get(key);
-        if (ProductMap != null) {
-            return ProductMap;
-        }
-        return getOutputsForForestrySapling(sapling);
-    }
-
-    public static String getItemStackString(ItemStack aStack) {
-        return Item.itemRegistry.getNameForObject(aStack.getItem()) + ":" + aStack.getItemDamage();
-
-    }
-
-    public static EnumMap<Mode, ItemStack> getOutputsForForestrySapling(ItemStack sapling) {
-        // copy form GTPP_TGS
-        ITree tree = TreeManager.treeRoot.getMember(sapling);
-        if (tree == null) return null;
-
-        String speciesUUID = tree.getIdent();
-
-        EnumMap<Mode, ItemStack> defaultMap = treeProductsMap.get("Forestry:sapling:" + speciesUUID);
-        if (defaultMap == null) return null;
-
-        // We need to make a new map so that we don't modify the stored amounts of outputs.
-        EnumMap<Mode, ItemStack> adjustedMap = new EnumMap<>(Mode.class);
-
-        ItemStack log = defaultMap.get(Mode.LOG);
-        if (log != null) {
-            double height = Math.max(
-                3 * (tree.getGenome()
-                    .getHeight() - 1),
-                0) + 1;
-            double girth = tree.getGenome()
-                .getGirth();
-
-            log = log.copy();
-            log.stackSize = (int) (log.stackSize * height * girth);
-            adjustedMap.put(Mode.LOG, log);
-        }
-
-        ItemStack saplingOut = defaultMap.get(Mode.SAPLING);
-        if (saplingOut != null) {
-            // Lowest = 0.01 ... Average = 0.05 ... Highest = 0.3
-            double fertility = tree.getGenome()
-                .getFertility() * 10;
-
-            // Return a copy of the *input* sapling, retaining its genetics.
-            int stackSize = Math.max(1, (int) (saplingOut.stackSize * fertility));
-            saplingOut = sapling.copy();
-            saplingOut.stackSize = stackSize;
-            adjustedMap.put(Mode.SAPLING, saplingOut);
-        }
-
-        ItemStack leaves = defaultMap.get(Mode.LEAVES);
-        if (leaves != null) {
-            adjustedMap.put(Mode.LEAVES, leaves.copy());
-        }
-
-        ItemStack fruit = defaultMap.get(Mode.FRUIT);
-        if (fruit != null) {
-            // Lowest = 0.025 ... Average = 0.2 ... Highest = 0.4
-            double yield = tree.getGenome()
-                .getYield() * 10;
-
-            fruit = fruit.copy();
-            fruit.stackSize = (int) (fruit.stackSize * yield);
-            adjustedMap.put(Mode.FRUIT, fruit);
-        }
-
-        return adjustedMap;
     }
 
     @Override
@@ -822,7 +722,7 @@ public class TST_MegaTreeFarm extends GTCM_MultiMachineBase<TST_MegaTreeFarm> {
                 tierMultiplier = getTierMultiplier(EuTier);
                 return switch (mMode) {
                     case 1 -> AquaticZoneSimulator();
-                    // case 2 -> MachineMode3();
+                    case 2 -> TargetedCloning();
                     default -> TreeGrowthSimulator();
                 };
             }
@@ -1039,19 +939,28 @@ public class TST_MegaTreeFarm extends GTCM_MultiMachineBase<TST_MegaTreeFarm> {
                 return SimpleCheckRecipeResult.ofSuccess("fishing");
             }
 
-            // private CheckRecipeResult MachineMode3() {
-            // ItemStack controllerStack = getControllerSlot();
-            // IGregTechTileEntity aBaseMetaTileEntity = getBaseMetaTileEntity();
-            // if (controllerStack == null) return SimpleCheckRecipeResult.ofFailure("failed");
-            // if (controllerStack.isItemEqual(GTCMItemList.TestItem0.get(1))) {
-            // String mobType = controllerStack.getTagCompound()
-            // .getString("mobType");
-            // MobHandlerLoader.MobEECRecipe recipe = MobHandlerLoader.recipeMap.get(mobType);
-            // // mOutputItems = recipe
-            // // .generateOutputs(new FastRandom(), this, 7, 3, false, false);
-            // }
-            // return SimpleCheckRecipeResult.ofSuccess("debug");
-            // }
+            private CheckRecipeResult TargetedCloning() {
+                ItemStack controllerStack = getControllerSlot();
+                if (controllerStack == null) return SimpleCheckRecipeResult.ofFailure("failed");
+
+                int recipeNum = 0;
+                if (controllerStack.isItemEqual(GTCMItemList.TestItem0.get(1))) {
+                    for (ItemStack aStack : getStoredInputsNoSeparation()) {
+                        if (aStack != null && aStack.getItem() instanceof ItemIntegratedCircuit
+                            && aStack.getItemDamage() > 0
+                            && aStack.stackSize > 0) recipeNum += aStack.getItemDamage() * aStack.stackSize;
+                    }
+                    if (recipeNum != 0) {
+                        outputItems = generateDrops(recipeNum, new Random(), 10000, true);
+                        duration = 20;
+                        calculatedEut = 0;
+                        return SimpleCheckRecipeResult.ofSuccess("running");
+                    }
+                    return SimpleCheckRecipeResult.ofSuccess("no_recipe");
+                }
+                return SimpleCheckRecipeResult.ofSuccess("no_circuit");
+            }
+
         };
     }
 
@@ -1067,42 +976,6 @@ public class TST_MegaTreeFarm extends GTCM_MultiMachineBase<TST_MegaTreeFarm> {
         return ret;
     }
 
-    // private static class ESSFakePlayer extends FakePlayer {
-    //
-    // TST_EcoSphereSimulator mte;
-    // ItemStack currentWeapon;
-    //
-    // public ESSFakePlayer(TST_EcoSphereSimulator mte) {
-    // super(
-    // (WorldServer) mte.getBaseMetaTileEntity()
-    // .getWorld(),
-    // new GameProfile(
-    // UUID.nameUUIDFromBytes("[EEC Fake Player]".getBytes(StandardCharsets.UTF_8)),
-    // "[EEC Fake Player]"));
-    // this.mte = mte;
-    // }
-    //
-    // @Override
-    // public void renderBrokenItemStack(ItemStack p_70669_1_) {}
-    //
-    // @Override
-    // public Random getRNG() {
-    // return mte.rand;
-    // }
-    //
-    // @Override
-    // public void destroyCurrentEquippedItem() {}
-    //
-    // @Override
-    // public ItemStack getCurrentEquippedItem() {
-    // return currentWeapon;
-    // }
-    //
-    // @Override
-    // public ItemStack getHeldItem() {
-    // return currentWeapon;
-    // }
-    // }
     @Override
     protected MultiblockTooltipBuilder createTooltip() {
         final MultiblockTooltipBuilder tt = new MultiblockTooltipBuilder();

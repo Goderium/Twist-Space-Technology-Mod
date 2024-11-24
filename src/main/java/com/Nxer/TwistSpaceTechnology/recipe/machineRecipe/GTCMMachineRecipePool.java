@@ -406,7 +406,7 @@ public class GTCMMachineRecipePool implements IRecipePool {
         // Upgrade LuV
         GTValues.RA.stdBuilder()
             .metadata(RESEARCH_ITEM, GTModHandler.getModItem("gregtech", "gt.blockmachines", 1, 11105))
-            .metadata(RESEARCH_TIME, 1 * HOURS)
+            .metadata(RESEARCH_TIME, HOURS)
             .itemInputs(
                 ItemList.Casing_Advanced_Iridium.get(1),
                 GTModHandler.getModItem("gregtech", "gt.blockmachines", 1, 11105),

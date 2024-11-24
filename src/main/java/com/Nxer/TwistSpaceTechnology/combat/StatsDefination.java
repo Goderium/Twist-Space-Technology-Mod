@@ -56,7 +56,7 @@ public class StatsDefination {
         // HV
         ArmorStats.put("item.ItemSwordElemental", new int[] { 15, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0 });
         ArmorStats.put("item.ItemSwordVoid", new int[] { 15, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0 });
-        ArmorStats.put("item.bloodSword", new int[] { 15, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0 });;
+        ArmorStats.put("item.bloodSword", new int[] { 15, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0 });
         ArmorStats.put("item.knightlySword", new int[] { 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
         ArmorStats.put("item.iceSword", new int[] { 25, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0 });
         // EV

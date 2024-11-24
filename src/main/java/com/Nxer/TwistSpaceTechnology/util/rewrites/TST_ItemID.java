@@ -146,10 +146,9 @@ public class TST_ItemID extends GTUtility.ItemId {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof TST_ItemID)) {
+        if (!(o instanceof TST_ItemID tstItemID)) {
             return false;
         }
-        TST_ItemID tstItemID = (TST_ItemID) o;
         return metaData == tstItemID.metaData && Objects.equals(item, tstItemID.item)
             && Objects.equals(nbt, tstItemID.nbt);
     }

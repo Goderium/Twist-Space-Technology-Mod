@@ -676,15 +676,10 @@ public class Config {
 
         // region Hyper Spacetime Transformer
         Mode_Default_HyperSpacetimeTransformer = (byte) configuration.getInt("Mode_Default_HyperSpacetimeTransformer", HyperSpacetimeTransformer, Mode_Default_HyperSpacetimeTransformer, 0, 1, "");
-        ;
         ParallelMultiplier_HyperSpacetimeTransformer = configuration.getInt("ParallelMultiplier_HyperSpacetimeTransformer", HyperSpacetimeTransformer, ParallelMultiplier_HyperSpacetimeTransformer, 1, Integer.MAX_VALUE, "");
-        ;
         SpeedMultiplier_MolecularTransformerMode_HyperSpacetimeTransformer = configuration.getInt("SpeedMultiplier_MolecularTransformerMode_HyperSpacetimeTransformer", HyperSpacetimeTransformer, SpeedMultiplier_MolecularTransformerMode_HyperSpacetimeTransformer, 1, Integer.MAX_VALUE, "");
-        ;
         SpeedMultiplier_SpaceTimeTransformerMode_HyperSpacetimeTransformer = configuration.getInt("SpeedMultiplier_SpaceTimeTransformerMode_HyperSpacetimeTransformer", HyperSpacetimeTransformer, SpeedMultiplier_SpaceTimeTransformerMode_HyperSpacetimeTransformer, 1, Integer.MAX_VALUE, "");
-        ;
         EnablePerfectOverclock_MolecularTransformerMode_HyperSpacetimeTransformer = configuration.getBoolean("EnablePerfectOverclock_MolecularTransformerMode_HyperSpacetimeTransformer", HyperSpacetimeTransformer, EnablePerfectOverclock_MolecularTransformerMode_HyperSpacetimeTransformer, "");
-        ;
         // endregion
 
         // region Mega Egg Generator
@@ -737,10 +732,10 @@ public class Config {
         // endregion
 
         // region Industrial Magnetar Separator
-        Enable_IndustrialMagnetarSeparator = configuration.getBoolean("EnableIndustrialMagnetarSeparator",IndustrialMagnetarSeparator, Enable_IndustrialMagnetarSeparator, "Enable Industrial Magnetar Separator.");;
+        Enable_IndustrialMagnetarSeparator = configuration.getBoolean("EnableIndustrialMagnetarSeparator",IndustrialMagnetarSeparator, Enable_IndustrialMagnetarSeparator, "Enable Industrial Magnetar Separator.");
         SpeedBouns_IndustrialMagnetarSeparator = Float.parseFloat(configuration.getString("SpeedBonus_IndustrialMagnetarSeparator", IndustrialMagnetarSeparator, String.valueOf(SpeedBouns_IndustrialMagnetarSeparator), "Speed Bonus of Industrial Magnetar Separator. Type: float"));
         EuModifier_IndustrialMagnetarSeparator = Float.parseFloat(configuration.getString("EuModifier_IndustrialMagnetarSeparator", IndustrialMagnetarSeparator, String.valueOf(EuModifier_IndustrialMagnetarSeparator), "Eu Modifier of Industrial Magnetar Separator. Type: float"));
-        ParallelMultiply_IndustrialMagnetarSeparator = configuration.getInt("ParallelMultiply_IndustrialMagnetarSeparator", IndustrialMagnetarSeparator, ParallelMultiply_IndustrialMagnetarSeparator, 1, 2147483646, "Parallel Multiply of Industrial Magnetar Separator. Type: int");;
+        ParallelMultiply_IndustrialMagnetarSeparator = configuration.getInt("ParallelMultiply_IndustrialMagnetarSeparator", IndustrialMagnetarSeparator, ParallelMultiply_IndustrialMagnetarSeparator, 1, 2147483646, "Parallel Multiply of Industrial Magnetar Separator. Type: int");
         // endregion
 
         // region Industrial Magic Matrix

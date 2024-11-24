@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -370,4 +371,8 @@ public final class Utils {
         return 1 + Math.max(0, (Math.log(voltage) / LOG2) - 5) / 2;
     }
 
+    public static String getItemStackString(ItemStack aStack) {
+        return Item.itemRegistry.getNameForObject(aStack.getItem()) + ":" + aStack.getItemDamage();
+
+    }
 }

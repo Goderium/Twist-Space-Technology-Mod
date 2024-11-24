@@ -1,6 +1,6 @@
 package com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes;
 
-import static com.Nxer.TwistSpaceTechnology.common.machine.TST_MegaTreeFarm.getItemStackString;
+import static com.Nxer.TwistSpaceTechnology.util.Utils.getItemStackString;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

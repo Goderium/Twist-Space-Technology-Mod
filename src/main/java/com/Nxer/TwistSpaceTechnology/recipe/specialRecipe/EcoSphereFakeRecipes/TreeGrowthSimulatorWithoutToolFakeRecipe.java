@@ -1,11 +1,11 @@
 package com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes;
 
-import static com.Nxer.TwistSpaceTechnology.common.machine.TST_MegaTreeFarm.getModeMultiplier;
-import static com.Nxer.TwistSpaceTechnology.common.machine.TST_MegaTreeFarm.queryTreeProduct;
+import static com.Nxer.TwistSpaceTechnology.util.Utils.getItemStackString;
 import static gtPlusPlus.xmod.gregtech.common.tileentities.machines.multi.production.MTETreeFarm.treeProductsMap;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import net.minecraft.init.Blocks;
@@ -20,6 +20,8 @@ import com.Nxer.TwistSpaceTechnology.common.recipeMap.GTCMRecipe;
 import com.Nxer.TwistSpaceTechnology.recipe.IRecipePool;
 import com.Nxer.TwistSpaceTechnology.util.TextEnums;
 
+import forestry.api.arboriculture.ITree;
+import forestry.api.arboriculture.TreeManager;
 import galaxyspace.BarnardsSystem.BRFluids;
 import gregtech.api.enums.GTValues;
 import gregtech.api.enums.Materials;
@@ -45,6 +47,101 @@ public class TreeGrowthSimulatorWithoutToolFakeRecipe implements IRecipePool {
     static ItemStack[] allLeaves;
     static ItemStack[] allFruits;
     public static ItemStack[][] allProducts;
+
+    public static int getTierMultiplier(int tier) {
+        return (int) Math
+            .floor(3 * Math.pow(2, 0.1 * (tier - 1) * (8 + Math.log(25 + Math.exp(25 - tier)) / Math.log(5))));
+    }
+
+    /**
+     * Use the highest bonus from the original Recipe.
+     */
+
+    public static int getModeMultiplier(Mode mode) {
+        return switch (mode) {
+            case LOG -> 20;
+            case SAPLING -> 3;
+            case LEAVES -> 8;
+            case FRUIT -> 1;
+        };
+
+    }
+
+    public static Map<Integer, Mode> damageModeMap = new HashMap<>();
+    {
+        damageModeMap.put(1, Mode.LOG);
+        damageModeMap.put(2, Mode.SAPLING);
+        damageModeMap.put(3, Mode.LEAVES);
+        damageModeMap.put(4, Mode.FRUIT);
+    }
+
+    public static EnumMap<Mode, ItemStack> queryTreeProduct(ItemStack sapling) {
+        String key = getItemStackString(sapling);
+        EnumMap<Mode, ItemStack> ProductMap = treeProductsMap.get(key);
+        if (ProductMap != null) {
+            return ProductMap;
+        }
+        return getOutputsForForestrySapling(sapling);
+    }
+
+    public static EnumMap<Mode, ItemStack> getOutputsForForestrySapling(ItemStack sapling) {
+        // copy form GTPP_TGS
+        ITree tree = TreeManager.treeRoot.getMember(sapling);
+        if (tree == null) return null;
+
+        String speciesUUID = tree.getIdent();
+
+        EnumMap<Mode, ItemStack> defaultMap = treeProductsMap.get("Forestry:sapling:" + speciesUUID);
+        if (defaultMap == null) return null;
+
+        // We need to make a new map so that we don't modify the stored amounts of outputs.
+        EnumMap<Mode, ItemStack> adjustedMap = new EnumMap<>(Mode.class);
+
+        ItemStack log = defaultMap.get(Mode.LOG);
+        if (log != null) {
+            double height = Math.max(
+                3 * (tree.getGenome()
+                    .getHeight() - 1),
+                0) + 1;
+            double girth = tree.getGenome()
+                .getGirth();
+
+            log = log.copy();
+            log.stackSize = (int) (log.stackSize * height * girth);
+            adjustedMap.put(Mode.LOG, log);
+        }
+
+        ItemStack saplingOut = defaultMap.get(Mode.SAPLING);
+        if (saplingOut != null) {
+            // Lowest = 0.01 ... Average = 0.05 ... Highest = 0.3
+            double fertility = tree.getGenome()
+                .getFertility() * 10;
+
+            // Return a copy of the *input* sapling, retaining its genetics.
+            int stackSize = Math.max(1, (int) (saplingOut.stackSize * fertility));
+            saplingOut = sapling.copy();
+            saplingOut.stackSize = stackSize;
+            adjustedMap.put(Mode.SAPLING, saplingOut);
+        }
+
+        ItemStack leaves = defaultMap.get(Mode.LEAVES);
+        if (leaves != null) {
+            adjustedMap.put(Mode.LEAVES, leaves.copy());
+        }
+
+        ItemStack fruit = defaultMap.get(Mode.FRUIT);
+        if (fruit != null) {
+            // Lowest = 0.025 ... Average = 0.2 ... Highest = 0.4
+            double yield = tree.getGenome()
+                .getYield() * 10;
+
+            fruit = fruit.copy();
+            fruit.stackSize = (int) (fruit.stackSize * yield);
+            adjustedMap.put(Mode.FRUIT, fruit);
+        }
+
+        return adjustedMap;
+    }
 
     @Override
     public void loadRecipes() {

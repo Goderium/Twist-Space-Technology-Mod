@@ -44,6 +44,7 @@ import com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.CosmicProcessorCircuit
 import com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.DSPRecipePool;
 import com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.DragonBloodRecipe;
 import com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.AquaticZoneSimulatorFakeRecipe;
+import com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.TargetedCloningFakeRecipe;
 import com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.EcoSphereFakeRecipes.TreeGrowthSimulatorWithoutToolFakeRecipe;
 import com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.MegaUniversalSpaceStationRecipePool;
 import com.Nxer.TwistSpaceTechnology.recipe.specialRecipe.TSTBufferedEnergyHatchRecipe;
@@ -106,10 +107,10 @@ public class RecipeLoader {
 
     public static void loadRecipesServerStarted() {
         new StellarForgeRecipePool().loadOnServerStarted();
+        new TargetedCloningFakeRecipe().loadRecipes();
     }
 
     public static void loadRecipemixin() {
         new TreeGrowthSimulatorWithoutToolFakeRecipe().loadRecipes();
-        // new Mode3SimulatorFakeRecipe().loadRecipes();
     }
 }
