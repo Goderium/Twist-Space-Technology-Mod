@@ -110,7 +110,7 @@ public class RecipeLoader {
         new TargetedCloningFakeRecipe().loadRecipes();
     }
 
-    public static void loadRecipemixin() {
+    public static void loadRecipeAfterGT() {
         new TreeGrowthSimulatorWithoutToolFakeRecipe().loadRecipes();
     }
 }
