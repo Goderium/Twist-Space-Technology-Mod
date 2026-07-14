@@ -2,6 +2,7 @@ package com.Nxer.TwistSpaceTechnology.common.machine;
 
 import static com.Nxer.TwistSpaceTechnology.common.misc.StructureErrorDefs.SimpleStructureErrors.laser_hatch_incompatible;
 import static com.Nxer.TwistSpaceTechnology.common.misc.StructureErrorDefs.SimpleStructureErrors.special_hatch_amount_wrong;
+import static com.Nxer.TwistSpaceTechnology.config.Config.Debug_DisplayAdvCircuitAssemblyLineCurrentRecipe;
 import static com.Nxer.TwistSpaceTechnology.util.TextLocalization.BLUE_PRINT_INFO;
 import static com.Nxer.TwistSpaceTechnology.util.TextLocalization.ModName;
 import static com.Nxer.TwistSpaceTechnology.util.TextLocalization.StructureTooComplex;
@@ -242,7 +243,9 @@ public class TST_AdvCircuitAssemblyLine extends GTCM_MultiMachineBase<TST_AdvCir
     @NotNull
     @Override
     public Collection<RecipeMap<?>> getAvailableRecipeMaps() {
-        return Arrays.asList(BartWorksRecipeMaps.circuitAssemblyLineRecipes, GTCMRecipe.advCircuitAssemblyLineRecipes);
+        return Arrays.asList(
+            Debug_DisplayAdvCircuitAssemblyLineCurrentRecipe ? GTCMRecipe.advCircuitAssemblyLineRecipes
+                : BartWorksRecipeMaps.circuitAssemblyLineRecipes);
     }
 
     @Override

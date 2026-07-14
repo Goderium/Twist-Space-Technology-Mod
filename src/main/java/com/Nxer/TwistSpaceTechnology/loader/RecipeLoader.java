@@ -109,7 +109,6 @@ public class RecipeLoader {
         // TST Recipe Map
         IntensifyChemicalDistorterRecipePool.loadRecipes();
         PreciseHighEnergyPhotonicQuantumMasterRecipePool.loadRecipes();
-        MiracleTopRecipePool.loadRecipes();
         CrystallineInfinitierRecipePool.loadRecipes();
         DSPRecipePool.loadRecipes();
         MegaUniversalSpaceStationRecipePool.loadRecipes();
@@ -129,7 +128,6 @@ public class RecipeLoader {
         BloodyHellRecipePool.loadRecipes();
         MegaStoneBreakerRecipePool.loadRecipes();
         IndustrialAlchemyTowerRecipePool.loadRecipes();
-        CircuitAssemblyLineWithoutImprintRecipePool.loadRecipes();
         RapidHeatExchangeRecipePool.loadRecipes();
         DeployedNanoCoreRecipePool.loadRecipes();
         SimpleFurnaceFuelPool.loadRecipes();
@@ -165,6 +163,8 @@ public class RecipeLoader {
 
         StellarForgeRecipePool.loadOnServerStarted();
         TreeGrowthSimulatorWithoutToolFakeRecipe.loadRecipes();
+        MiracleTopRecipePool.loadRecipes();
+        CircuitAssemblyLineWithoutImprintRecipePool.loadRecipes();
         if (Config.Enable_IndustrialMagicMatrix) {
             new IndustrialMagicMatrixRecipePool().loadRecipes();
         }

@@ -29,6 +29,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.oredict.OreDictionary;
 
 import com.Nxer.TwistSpaceTechnology.TwistSpaceTechnology;
 import com.Nxer.TwistSpaceTechnology.common.GTCMItemList;
@@ -61,6 +62,7 @@ public class MiracleTopRecipePool {
     public static final HashMap<ItemStack, ItemStack> circuitItemsToWrapped = new HashMap<>();
     private static final HashSet<Materials> superConductorMaterialList = new HashSet<>();
     private static final HashSet<OrePrefixes> targetModifyOreDict = new HashSet<>();
+    private static final HashSet<String> circuitGTOreDict = new HashSet<>();
     private static final HashMap<ItemStack, FluidStack> specialMaterialCantAutoModify = new HashMap<>();
 
     public static void loadRecipes() {
@@ -105,6 +107,9 @@ public class MiracleTopRecipePool {
                 || itemName.contains(Mods.ProjectRedCore.ID)
                 || itemName.contains(Mods.ProjectRedTransportation.ID)) continue;
 
+            // Skip GT tiered circuit
+            if (hasCircuitOreDict(originalRecipe.mOutputs[0])) continue;
+
             boolean isRecipeAdded = false;
             for (GTRecipe cachedRecipe : recipeCache) {
                 if (isRecipeInputItemSame(originalRecipe, cachedRecipe)) {
@@ -130,7 +135,7 @@ public class MiracleTopRecipePool {
         for (GTRecipe aRecipe : recipeCache) {
             int IntegratedCircuitNum = 16;
             for (ItemStack aStack : aRecipe.mInputs) {
-                if (aStack != null && aStack.getItem() == ItemList.Circuit_Integrated.getItem()) {
+                if (aStack.getItem() == ItemList.Circuit_Integrated.getItem()) {
                     IntegratedCircuitNum += aStack.getItemDamage();
                     if (IntegratedCircuitNum > 24) IntegratedCircuitNum -= 24;
                     break;
@@ -418,17 +423,17 @@ public class MiracleTopRecipePool {
         if (oRecipe == null) return null;
 
         for (ItemStack aStack : oRecipe.mInputs) {
-            if (aStack != null) inputItems.add(copyAmountUnsafe(aStack.stackSize * inputItemMultiTimes, aStack));
+            inputItems.add(copyAmountUnsafe(aStack.stackSize * inputItemMultiTimes, aStack));
         }
         for (FluidStack aStack : oRecipe.mFluidInputs) {
-            if (aStack != null) inputFluids.add(copyAmount(aStack.amount * inputFluidMultiTimes, aStack));
+            inputFluids.add(copyAmount(aStack.amount * inputFluidMultiTimes, aStack));
         }
 
         for (ItemStack aStack : oRecipe.mOutputs) {
-            if (aStack != null) outputItems.add(copyAmountUnsafe(aStack.stackSize * outputItemMultiTimes, aStack));
+            outputItems.add(copyAmountUnsafe(aStack.stackSize * outputItemMultiTimes, aStack));
         }
         for (FluidStack aStack : oRecipe.mFluidOutputs) {
-            if (aStack != null) outputFluids.add(copyAmount(aStack.amount * outputFluidMultiTimes, aStack));
+            outputFluids.add(copyAmount(aStack.amount * outputFluidMultiTimes, aStack));
         }
 
         return new GTRecipe(
@@ -526,6 +531,26 @@ public class MiracleTopRecipePool {
             .eut(aRecipe.mEUt)
             .duration(aRecipe.mDuration)
             .addTo(MT);
+    }
+
+    private static void addOreDictNames(ItemStack stack, HashSet<String> oreDictSet) {
+        if (stack == null) return;
+
+        for (int oreId : OreDictionary.getOreIDs(stack)) {
+            oreDictSet.add(OreDictionary.getOreName(oreId));
+        }
+    }
+
+    private static boolean hasCircuitOreDict(ItemStack stack) {
+        if (stack == null) return false;
+
+        for (int oreId : OreDictionary.getOreIDs(stack)) {
+            if (circuitGTOreDict.contains(OreDictionary.getOreName(oreId))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void initStatics() {
@@ -726,6 +751,22 @@ public class MiracleTopRecipePool {
         targetModifyOreDict.add(OrePrefixes.pipeHuge);
         targetModifyOreDict.add(OrePrefixes.pipeQuadruple);
         targetModifyOreDict.add(OrePrefixes.pipeNonuple);
+
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.ULV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.LV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.MV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.HV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.EV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.IV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.LuV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.ZPM, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UHV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UEV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UIV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UMV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UXV, 1), circuitGTOreDict);
+        addOreDictNames(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.MAX, 1), circuitGTOreDict);
     }
 
     // spotless:off
