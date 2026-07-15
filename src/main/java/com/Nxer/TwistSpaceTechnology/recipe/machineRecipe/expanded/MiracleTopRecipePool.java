@@ -144,7 +144,7 @@ public class MiracleTopRecipePool {
 
             addRecipeMT(
                 addIntegratedCircuitToRecipe(
-                    reduplicateRecipe(ModifyRecipe(aRecipe, false), 3, 3, 4, 4, 1, 3),
+                    reduplicateRecipe(ModifyRecipe(aRecipe, true), 3, 3, 4, 4, 1, 3),
                     IntegratedCircuitNum));
         }
 
@@ -293,8 +293,7 @@ public class MiracleTopRecipePool {
                                         null,
                                         aRecipe.mDuration,
                                         aRecipe.mEUt,
-                                        0),
-                                    true),
+                                        0)),
                                 4));
                     }
                 } else {
@@ -314,8 +313,7 @@ public class MiracleTopRecipePool {
                                     null,
                                     aRecipe.mDuration,
                                     aRecipe.mEUt,
-                                    0),
-                                true),
+                                    0)),
                             4));
                 }
             }
@@ -330,21 +328,24 @@ public class MiracleTopRecipePool {
 
         for (GTRecipe aRecipe : spaceAssemblerRecipes.getAllRecipes()) {
             if (GenerateRecipeOutputs.contains(TST_ItemID.createNoNBT(aRecipe.mOutputs[0]))) {
-                addRecipeMT(addIntegratedCircuitToRecipe(reduplicateRecipe(ModifyRecipe(aRecipe, true), 4, 1), 16));
+                addRecipeMT(addIntegratedCircuitToRecipe(reduplicateRecipe(ModifyRecipe(aRecipe), 4, 1), 16));
             }
         }
     }
 
     // Modify the circuit part to warp, others turn 16 times. All Material to molten.
-    public static GTRecipe ModifyRecipe(GTRecipe baseRecipe, boolean isFluidInputMultiply) {
+    // Fluid inputs are multiplied by 16 by default; pass true to skip this for recipes already scaled later.
+    public static GTRecipe ModifyRecipe(GTRecipe baseRecipe) {
+        return ModifyRecipe(baseRecipe, false);
+    }
 
+    public static GTRecipe ModifyRecipe(GTRecipe baseRecipe, boolean skipFluidInputMultiply) {
         ArrayList<ItemStack> inputItems = new ArrayList<>();
         ArrayList<FluidStack> inputFluids = new ArrayList<>();
 
         if (baseRecipe.mFluidInputs != null && baseRecipe.mFluidInputs.length > 0) {
-            if (isFluidInputMultiply)
-                Collections.addAll(inputFluids, reduplicateRecipe(baseRecipe, 16, 1).mFluidInputs);
-            else Collections.addAll(inputFluids, baseRecipe.mFluidInputs);
+            if (skipFluidInputMultiply) Collections.addAll(inputFluids, baseRecipe.mFluidInputs);
+            else Collections.addAll(inputFluids, reduplicateRecipe(baseRecipe, 16, 1).mFluidInputs);
         }
 
         if (baseRecipe.mInputs != null && baseRecipe.mInputs.length > 0) {
@@ -422,18 +423,26 @@ public class MiracleTopRecipePool {
 
         if (oRecipe == null) return null;
 
-        for (ItemStack aStack : oRecipe.mInputs) {
-            inputItems.add(copyAmountUnsafe(aStack.stackSize * inputItemMultiTimes, aStack));
+        if (oRecipe.mInputs != null) {
+            for (ItemStack aStack : oRecipe.mInputs) {
+                inputItems.add(copyAmountUnsafe(aStack.stackSize * inputItemMultiTimes, aStack));
+            }
         }
-        for (FluidStack aStack : oRecipe.mFluidInputs) {
-            inputFluids.add(copyAmount(aStack.amount * inputFluidMultiTimes, aStack));
+        if (oRecipe.mFluidInputs != null) {
+            for (FluidStack aStack : oRecipe.mFluidInputs) {
+                inputFluids.add(copyAmount(aStack.amount * inputFluidMultiTimes, aStack));
+            }
         }
 
-        for (ItemStack aStack : oRecipe.mOutputs) {
-            outputItems.add(copyAmountUnsafe(aStack.stackSize * outputItemMultiTimes, aStack));
+        if (oRecipe.mOutputs != null) {
+            for (ItemStack aStack : oRecipe.mOutputs) {
+                outputItems.add(copyAmountUnsafe(aStack.stackSize * outputItemMultiTimes, aStack));
+            }
         }
-        for (FluidStack aStack : oRecipe.mFluidOutputs) {
-            outputFluids.add(copyAmount(aStack.amount * outputFluidMultiTimes, aStack));
+        if (oRecipe.mFluidOutputs != null) {
+            for (FluidStack aStack : oRecipe.mFluidOutputs) {
+                outputFluids.add(copyAmount(aStack.amount * outputFluidMultiTimes, aStack));
+            }
         }
 
         return new GTRecipe(
