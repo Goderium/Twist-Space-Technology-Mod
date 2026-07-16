@@ -39,6 +39,7 @@ import com.Nxer.TwistSpaceTechnology.config.Config;
 import com.Nxer.TwistSpaceTechnology.util.recipes.TST_RecipeBuilder;
 import com.Nxer.TwistSpaceTechnology.util.rewrites.TST_ItemID;
 import com.dreammaster.item.NHItemList;
+import com.github.bsideup.jabel.Desugar;
 
 import bartworks.util.BWUtil;
 import goodgenerator.items.GGMaterial;
@@ -62,6 +63,11 @@ import gtPlusPlus.xmod.gregtech.api.enums.GregtechItemList;
 public class MiracleTopRecipePool {
 
     private static final RecipeMap<?> MT = GTCMRecipe.MiracleTopRecipes;
+    private static final RecipeMap<?>[] NAC_UNWRAP_RECIPE_MAPS = new RecipeMap<?>[] {
+        RecipeMaps.nanochipSMDProcessorRecipes, RecipeMaps.nanochipBoardProcessorRecipes,
+        RecipeMaps.nanochipEtchingArray, RecipeMaps.nanochipCuttingChamber, RecipeMaps.nanochipWireTracer,
+        RecipeMaps.nanochipSuperconductorSplitter, RecipeMaps.nanochipOpticalOrganizer,
+        RecipeMaps.nanochipEncasementWrapper, RecipeMaps.nanochipBiologicalCoordinator };
     public static final HashMap<ItemStack, ItemStack> circuitItemsToWrapped = new HashMap<>();
     private static final HashSet<Materials> superConductorMaterialList = new HashSet<>();
     private static final HashSet<OrePrefixes> targetModifyOreDict = new HashSet<>();
@@ -72,10 +78,10 @@ public class MiracleTopRecipePool {
         TwistSpaceTechnology.LOG.info("MiracleTopRecipePool loading recipes.");
         initStatics();
         loadNACRecipes();
-        // loadCircuitAssemblerRecipes();
-        // loadAssemblyLineRecipes();
-        // loadSpaceAssemblerRecipes();
-        // loadCustomRecipes();
+        loadCircuitAssemblerRecipes();
+        loadAssemblyLineRecipes();
+        loadSpaceAssemblerRecipes();
+        loadCustomRecipes();
     }
 
     private static void loadCircuitAssemblerRecipes() {
@@ -329,19 +335,15 @@ public class MiracleTopRecipePool {
     private static void loadNACRecipes() {
         HashSet<String> generatedRecipeKeys = new HashSet<>();
         for (GTRecipe aRecipe : RecipeMaps.nanochipAssemblyMatrixRecipes.getAllRecipes()) {
-            GTRecipe unwrappedRecipe = unwrapNACRecipe(aRecipe);
-            ItemStack output = unwrappedRecipe.mOutputs[0];
-            if (getNACComponent(output) != null) continue;
-
             if (aRecipe instanceof GTRecipe.GTRecipe_WithAlt recipeWithAlt && recipeWithAlt.mOreDictAlt != null
                 && recipeWithAlt.mOreDictAlt.length > 0) {
                 List<List<ItemStack>> choiceList = new ArrayList<>();
-                for (int i = 0; i < unwrappedRecipe.mInputs.length; i++) {
+                for (int i = 0; i < aRecipe.mInputs.length; i++) {
                     if (i < recipeWithAlt.mOreDictAlt.length && recipeWithAlt.mOreDictAlt[i] != null
                         && recipeWithAlt.mOreDictAlt[i].length > 0) {
                         choiceList.add(filterNACAlternatives(Arrays.asList(recipeWithAlt.mOreDictAlt[i])));
                     } else {
-                        choiceList.add(Collections.singletonList(unwrappedRecipe.mInputs[i]));
+                        choiceList.add(Collections.singletonList(aRecipe.mInputs[i]));
                     }
                 }
 
@@ -354,25 +356,43 @@ public class MiracleTopRecipePool {
                             .get(indexArray[i]);
                     }
 
-                    GTRecipe generatedRecipe = addIntegratedCircuitToRecipe(
-                        ModifyRecipe(
-                            new GTRecipe(
-                                false,
-                                inputs,
-                                new ItemStack[] { output },
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                unwrappedRecipe.mFluidInputs,
-                                null,
-                                unwrappedRecipe.mDuration,
-                                unwrappedRecipe.mEUt,
-                                0)),
-                        4);
-                    if (generatedRecipe != null && generatedRecipeKeys.add(buildNACRecipeKey(generatedRecipe))) {
-                        addRecipeMT(generatedRecipe);
+                    GTRecipe selectedRecipe = new GTRecipe(
+                        false,
+                        inputs,
+                        aRecipe.mOutputs == null ? null : aRecipe.mOutputs.clone(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        aRecipe.mFluidInputs == null ? null : aRecipe.mFluidInputs.clone(),
+                        null,
+                        aRecipe.mDuration,
+                        aRecipe.mEUt,
+                        0);
+                    GTRecipe unwrappedRecipe = unwrapNACRecipe(selectedRecipe);
+                    ItemStack output = unwrappedRecipe.mOutputs[0];
+                    if (getNACComponent(output) == null) {
+                        GTRecipe generatedRecipe = addIntegratedCircuitToRecipe(
+                            ModifyRecipe(
+                                new GTRecipe(
+                                    false,
+                                    unwrappedRecipe.mInputs,
+                                    new ItemStack[] { output },
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    unwrappedRecipe.mFluidInputs,
+                                    null,
+                                    unwrappedRecipe.mDuration,
+                                    unwrappedRecipe.mEUt,
+                                    0)),
+                            4);
+                        if (generatedRecipe != null && generatedRecipeKeys.add(buildNACRecipeKey(generatedRecipe))) {
+                            addRecipeMT(generatedRecipe);
+                        }
                     }
 
                     int slot = totalSlots - 1;
@@ -386,6 +406,9 @@ public class MiracleTopRecipePool {
                     if (slot < 0) break;
                 }
             } else {
+                GTRecipe unwrappedRecipe = unwrapNACRecipe(aRecipe);
+                ItemStack output = unwrappedRecipe.mOutputs[0];
+                if (getNACComponent(output) != null) continue;
                 GTRecipe generatedRecipe = addIntegratedCircuitToRecipe(
                     ModifyRecipe(
                         new GTRecipe(
@@ -473,7 +496,6 @@ public class MiracleTopRecipePool {
 
                 if (!isItemModified && isNeedTraverse) {
                     // It's better to determine whether it contains ore dict
-
                     for (Map.Entry<ItemStack, FluidStack> entry : specialMaterialCantAutoModify.entrySet()) {
                         if (GTUtility.areStacksEqual(entry.getKey(), aStack)) {
                             inputFluids
@@ -502,67 +524,6 @@ public class MiracleTopRecipePool {
             baseRecipe.mDuration * 12,
             baseRecipe.mEUt,
             0);
-    }
-
-    private static GTRecipe unwrapNACRecipe(GTRecipe recipe) {
-        ItemStack[] unwrappedInputs = recipe.mInputs.clone();
-        for (int i = 0; i < unwrappedInputs.length; i++) {
-            unwrappedInputs[i] = tryUnwrapNACComponent(unwrappedInputs[i]);
-        }
-
-        ItemStack[] unwrappedOutputs = recipe.mOutputs.clone();
-        for (int i = 0; i < unwrappedOutputs.length; i++) {
-            unwrappedOutputs[i] = tryUnwrapNACComponent(unwrappedOutputs[i]);
-        }
-
-        return new GTRecipe(
-            false,
-            unwrappedInputs,
-            unwrappedOutputs,
-            null,
-            null,
-            null,
-            null,
-            null,
-            recipe.mFluidInputs.clone(),
-            null,
-            recipe.mDuration,
-            recipe.mEUt,
-            0);
-    }
-
-    /**
-     * NAC stores inputs as fake items identified by CircuitComponent metadata.
-     * For regular processed parts and nested circuit tiers, restore the backing real item so the existing MT
-     * conversion logic can keep working. NAC-only special intermediates without a real backing item stay untouched.
-     */
-    private static ItemStack tryUnwrapNACComponent(ItemStack stack) {
-        CircuitComponent component = getNACComponent(stack);
-        if (component == null) return stack;
-
-        if (component.isProcessed && component.componentForProcessed != null) {
-            component = component.componentForProcessed.get();
-        }
-
-        if (component == null || component.realComponent == null) return stack;
-
-        ItemStack realStack = component.realComponent.get();
-        if (realStack == null) {
-            realStack = switch (component) {
-                case ProcessedPicoCircuitCasing -> NHItemList.PikoCircuit.get(1);
-                case ProcessedQuantumCircuitCasing -> NHItemList.QuantumCircuit.get(1);
-                case ProcessedPlanckCircuitCasing -> getModItem("dreamcraft", "PlanckCircuit", 1);
-                default -> null;
-            };
-        }
-        if (realStack == null) return stack;
-
-        return copyAmountUnsafe(stack.stackSize, realStack);
-    }
-
-    private static CircuitComponent getNACComponent(ItemStack stack) {
-        if (stack == null || stack.getItem() != CircuitComponentFakeItem.INSTANCE) return null;
-        return CircuitComponent.tryGetFromFakeStack(stack);
     }
 
     public static GTRecipe reduplicateRecipe(GTRecipe oRecipe, int inputItemMultiTimes, int inputFluidMultiTimes,
@@ -697,6 +658,147 @@ public class MiracleTopRecipePool {
             .addTo(MT);
     }
 
+    private static GTRecipe unwrapNACRecipe(GTRecipe recipe) {
+        ArrayList<ItemStack> unwrappedInputs = new ArrayList<>();
+        ArrayList<FluidStack> extraFluids = new ArrayList<>();
+        int extraDuration = 0;
+
+        if (recipe.mInputs != null) {
+            for (ItemStack input : recipe.mInputs) {
+                NACUnwrapResult result = unwrapNACInputStack(input, new HashSet<>());
+                Collections.addAll(unwrappedInputs, result.itemInputs);
+                Collections.addAll(extraFluids, result.fluidInputs);
+                extraDuration += result.extraDuration;
+            }
+        }
+
+        ItemStack[] unwrappedOutputs = recipe.mOutputs == null ? null : recipe.mOutputs.clone();
+        if (unwrappedOutputs != null) {
+            for (int i = 0; i < unwrappedOutputs.length; i++) {
+                unwrappedOutputs[i] = tryUnwrapNACComponent(unwrappedOutputs[i]);
+            }
+        }
+
+        ArrayList<FluidStack> mergedFluids = new ArrayList<>(extraFluids);
+        if (recipe.mFluidInputs != null && recipe.mFluidInputs.length > 0) {
+            Collections.addAll(mergedFluids, recipe.mFluidInputs.clone());
+        }
+
+        return new GTRecipe(
+            false,
+            mergeSameItem(unwrappedInputs.toArray(new ItemStack[0])),
+            unwrappedOutputs,
+            null,
+            null,
+            null,
+            null,
+            null,
+            mergeSameFluid(mergedFluids.toArray(new FluidStack[0])),
+            null,
+            recipe.mDuration + extraDuration,
+            recipe.mEUt,
+            0);
+    }
+
+    private static NACUnwrapResult unwrapNACInputStack(ItemStack stack, HashSet<String> visiting) {
+        if (stack == null) return NACUnwrapResult.empty();
+
+        CircuitComponent component = getNACComponent(stack);
+        if (component == null) {
+            return NACUnwrapResult.of(copyAmountUnsafe(stack.stackSize, stack));
+        }
+
+        String visitKey = TST_ItemID.create(stack) + ":" + stack.stackSize;
+        if (!visiting.add(visitKey)) {
+            return NACUnwrapResult.of(copyAmountUnsafe(stack.stackSize, tryUnwrapNACComponent(stack)));
+        }
+
+        try {
+            GTRecipe subRecipe = findNACUnwrapRecipe(stack);
+            if (subRecipe == null || subRecipe.mOutputs == null || subRecipe.mOutputs.length == 0) {
+                return NACUnwrapResult.of(copyAmountUnsafe(stack.stackSize, tryUnwrapNACComponent(stack)));
+            }
+
+            int outputAmount = Math.max(1, subRecipe.mOutputs[0].stackSize);
+            int multiplier = Math.max(1, stack.stackSize / outputAmount);
+            if (stack.stackSize % outputAmount != 0) multiplier++;
+
+            ArrayList<ItemStack> itemInputs = new ArrayList<>();
+            ArrayList<FluidStack> fluidInputs = new ArrayList<>();
+            int duration = subRecipe.mDuration * multiplier;
+
+            if (subRecipe.mInputs != null) {
+                for (ItemStack subInput : subRecipe.mInputs) {
+                    NACUnwrapResult childResult = unwrapNACInputStack(
+                        copyAmountUnsafe(subInput.stackSize * multiplier, subInput),
+                        visiting);
+                    Collections.addAll(itemInputs, childResult.itemInputs);
+                    Collections.addAll(fluidInputs, childResult.fluidInputs);
+                    duration += childResult.extraDuration;
+                }
+            }
+
+            if (subRecipe.mFluidInputs != null) {
+                for (FluidStack fluid : subRecipe.mFluidInputs) {
+                    fluidInputs.add(copyAmount(fluid.amount * multiplier * 4, fluid));
+                }
+            }
+
+            return new NACUnwrapResult(
+                mergeSameItem(itemInputs.toArray(new ItemStack[0])),
+                mergeSameFluid(fluidInputs.toArray(new FluidStack[0])),
+                duration);
+        } finally {
+            visiting.remove(visitKey);
+        }
+    }
+
+    /**
+     * NAC stores inputs as fake items identified by CircuitComponent metadata.
+     * For regular processed parts and nested circuit tiers, restore the backing real item so the existing MT
+     * conversion logic can keep working. NAC-only special intermediates without a real backing item stay untouched.
+     */
+    private static ItemStack tryUnwrapNACComponent(ItemStack stack) {
+        CircuitComponent component = getNACComponent(stack);
+        if (component == null) return stack;
+
+        if (component.isProcessed && component.componentForProcessed != null) {
+            component = component.componentForProcessed.get();
+        }
+
+        if (component == null || component.realComponent == null) return stack;
+
+        ItemStack realStack = component.realComponent.get();
+        if (realStack == null) {
+            realStack = switch (component) {
+                case ProcessedPicoCircuitCasing -> NHItemList.PikoCircuit.get(1);
+                case ProcessedQuantumCircuitCasing -> NHItemList.QuantumCircuit.get(1);
+                case ProcessedPlanckCircuitCasing -> getModItem("dreamcraft", "PlanckCircuit", 1);
+                default -> null;
+            };
+        }
+        if (realStack == null) return stack;
+
+        return copyAmountUnsafe(stack.stackSize, realStack);
+    }
+
+    private static CircuitComponent getNACComponent(ItemStack stack) {
+        if (stack == null || stack.getItem() != CircuitComponentFakeItem.INSTANCE) return null;
+        return CircuitComponent.tryGetFromFakeStack(stack);
+    }
+
+    private static GTRecipe findNACUnwrapRecipe(ItemStack output) {
+        for (RecipeMap<?> recipeMap : NAC_UNWRAP_RECIPE_MAPS) {
+            for (GTRecipe recipe : recipeMap.getAllRecipes()) {
+                if (recipe.mOutputs != null && recipe.mOutputs.length > 0
+                    && GTUtility.areStacksEqual(recipe.mOutputs[0], output)) {
+                    return recipe;
+                }
+            }
+        }
+        return null;
+    }
+
     private static String buildNACRecipeKey(GTRecipe recipe) {
         StringBuilder key = new StringBuilder();
         appendNACRecipeKey(key, recipe.mInputs);
@@ -745,11 +847,11 @@ public class MiracleTopRecipePool {
         boolean containsSuperconductor = false;
         int bestCircuitPartRank = -1;
         ItemStack bestCircuitPart = null;
-        List<ItemStack> unwrappedAlternatives = new ArrayList<>(alternatives.size());
+        List<ItemStack> preservedAlternatives = new ArrayList<>(alternatives.size());
 
         for (ItemStack stack : alternatives) {
             ItemStack unwrapped = tryUnwrapNACComponent(stack);
-            unwrappedAlternatives.add(unwrapped);
+            preservedAlternatives.add(stack);
             if (isSuperconductorChoice(unwrapped)) {
                 containsSuperconductor = true;
             }
@@ -757,13 +859,13 @@ public class MiracleTopRecipePool {
             int rank = getCircuitPartTierRank(unwrapped);
             if (rank > bestCircuitPartRank) {
                 bestCircuitPartRank = rank;
-                bestCircuitPart = unwrapped;
+                bestCircuitPart = stack;
             }
         }
 
-        if (containsSuperconductor) return unwrappedAlternatives;
+        if (containsSuperconductor) return preservedAlternatives;
         if (bestCircuitPart != null) return Collections.singletonList(bestCircuitPart);
-        return unwrappedAlternatives;
+        return preservedAlternatives;
     }
 
     private static boolean isSuperconductorChoice(ItemStack stack) {
@@ -790,6 +892,21 @@ public class MiracleTopRecipePool {
             || id.equals(TST_ItemID.createNoNBT(ItemList.Circuit_Parts_CapacitorXSMD.get(1)))
             || id.equals(TST_ItemID.createNoNBT(ItemList.Circuit_Parts_InductorXSMD.get(1)))) return 2;
         return -1;
+    }
+
+    @Desugar
+    private record NACUnwrapResult(ItemStack[] itemInputs, FluidStack[] fluidInputs, int extraDuration) {
+
+        private static NACUnwrapResult empty() {
+            return new NACUnwrapResult(new ItemStack[0], new FluidStack[0], 0);
+        }
+
+        private static NACUnwrapResult of(ItemStack stack) {
+            return new NACUnwrapResult(
+                stack == null ? new ItemStack[0] : new ItemStack[] { stack },
+                new FluidStack[0],
+                0);
+        }
     }
 
     private static void addOreDictNames(ItemStack stack, HashSet<String> oreDictSet) {
@@ -918,6 +1035,7 @@ public class MiracleTopRecipePool {
         circuitItemsToWrapped.put(ItemList.Circuit_Parts_Diode.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_DiodeSMD.get(1));
         circuitItemsToWrapped.put(ItemList.Circuit_Parts_Transistor.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_TransistorSMD.get(1));
         circuitItemsToWrapped.put(ItemList.Circuit_Parts_Capacitor.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_CapacitorSMD.get(1));
+        circuitItemsToWrapped.put(ItemList.Circuit_OpticalMainframe.get(1), WrappedCircuitItem.Wrapped_Circuit_UIV.get(1));     // TODO Only for Piko
         circuitItemsToWrapped.put(NHItemList.PikoCircuit.get(1), WrappedCircuitItem.Wrapped_Circuit_UMV.get(1));
         circuitItemsToWrapped.put(NHItemList.QuantumCircuit.get(1), WrappedCircuitItem.Wrapped_Circuit_UXV.get(1));
         // spotless:on
@@ -1560,24 +1678,6 @@ public class MiracleTopRecipePool {
 
     }
 
-    // pattern
-    /*
-    GTValues.RA.stdBuilder()
-            .itemInputs(
-                GTUtility.getIntegratedCircuit(1)
-
-            )
-            .fluidInputs(
-
-            )
-            .itemOutputs(
-
-            )
-
-            .eut()
-            .duration(20)
-            .addTo(MT);
-     */
     public enum WrappedCircuitItem {
         Wrapped_Circuit_ULV,
         Wrapped_Circuit_LV,
