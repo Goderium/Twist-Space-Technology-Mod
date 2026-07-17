@@ -79,11 +79,11 @@ public class MiracleTopRecipePool {
     public static void loadRecipes() {
         TwistSpaceTechnology.LOG.info("MiracleTopRecipePool loading recipes.");
         initStatics();
-        loadNACRecipes();
+        // loadNACRecipes();
         loadCircuitAssemblerRecipes();
-        loadAssemblyLineRecipes();
-        loadSpaceAssemblerRecipes();
-        loadCustomRecipes();
+        // loadAssemblyLineRecipes();
+        // loadSpaceAssemblerRecipes();
+        // loadCustomRecipes();
     }
 
     private static void loadCircuitAssemblerRecipes() {
@@ -132,7 +132,7 @@ public class MiracleTopRecipePool {
                 || itemName.contains(Mods.ProjectRedTransportation.ID)) continue;
 
             // Skip GT circuit
-            // if (hasCircuitOreDict(originalRecipe.mOutputs[0])) continue;
+            if (hasCircuitOreDict(originalRecipe.mOutputs[0])) continue;
 
             for (GTRecipe recipeVariant : expandPreferredRecipeVariants(originalRecipe, false)) {
                 GTRecipe recipeCopy = recipeVariant.copy();
@@ -148,7 +148,6 @@ public class MiracleTopRecipePool {
             }
         }
 
-        Map<String, GTRecipe> generatedRecipeCache = new LinkedHashMap<>();
         for (GTRecipe aRecipe : recipeCache) {
             int IntegratedCircuitNum = 16;
             for (ItemStack aStack : aRecipe.mInputs) {
@@ -159,16 +158,10 @@ public class MiracleTopRecipePool {
                 }
             }
 
-            GTRecipe generatedRecipe = addIntegratedCircuitToRecipe(
-                reduplicateRecipe(ModifyRecipe(aRecipe, true), 3, 3, 4, 4, 1, 3),
-                IntegratedCircuitNum);
-            if (generatedRecipe != null) {
-                cachePreferredGeneratedVariantRecipe(generatedRecipeCache, generatedRecipe);
-            }
-        }
-
-        for (GTRecipe generatedRecipe : generatedRecipeCache.values()) {
-            addRecipeMT(generatedRecipe);
+            addRecipeMT(
+                addIntegratedCircuitToRecipe(
+                    reduplicateRecipe(ModifyRecipe(aRecipe, true), 3, 3, 4, 4, 1, 3),
+                    IntegratedCircuitNum));
         }
 
     }
@@ -348,12 +341,8 @@ public class MiracleTopRecipePool {
             }
         }
 
-        HashSet<String> generatedRecipeKeys = new HashSet<>();
         for (GTRecipe cachedRecipe : recipeCache.values()) {
-            GTRecipe generatedRecipe = addIntegratedCircuitToRecipe(ModifyRecipe(cachedRecipe), 4);
-            if (generatedRecipe != null && generatedRecipeKeys.add(buildNACRecipeKey(generatedRecipe))) {
-                addRecipeMT(generatedRecipe);
-            }
+            addRecipeMT(addIntegratedCircuitToRecipe(ModifyRecipe(cachedRecipe), 4));
         }
     }
 
@@ -753,48 +742,6 @@ public class MiracleTopRecipePool {
         return (int) Math.floor(Math.log(eut / 8.0D) / Math.log(4.0D)) + 1;
     }
 
-    private static String buildNACRecipeKey(GTRecipe recipe) {
-        StringBuilder key = new StringBuilder();
-        appendNACRecipeKey(key, recipe.mInputs);
-        key.append('|');
-        appendNACRecipeKey(key, recipe.mFluidInputs);
-        key.append('|');
-        appendNACRecipeKey(key, recipe.mOutputs);
-        return key.toString();
-    }
-
-    private static void appendNACRecipeKey(StringBuilder key, ItemStack[] stacks) {
-        if (stacks == null) return;
-        for (ItemStack stack : stacks) {
-            if (stack == null) {
-                key.append("null;");
-                continue;
-            }
-            key.append(Item.itemRegistry.getNameForObject(stack.getItem()))
-                .append('@')
-                .append(stack.getItemDamage())
-                .append('x')
-                .append(stack.stackSize)
-                .append(';');
-        }
-    }
-
-    private static void appendNACRecipeKey(StringBuilder key, FluidStack[] stacks) {
-        if (stacks == null) return;
-        for (FluidStack stack : stacks) {
-            if (stack == null || stack.getFluid() == null) {
-                key.append("null;");
-                continue;
-            }
-            key.append(
-                stack.getFluid()
-                    .getName())
-                .append('x')
-                .append(stack.amount)
-                .append(';');
-        }
-    }
-
     private static List<ItemStack> filterPreferredAlternatives(List<ItemStack> alternatives,
         boolean unwrapNACComponents) {
         if (alternatives == null || alternatives.isEmpty()) return Collections.emptyList();
@@ -1030,43 +977,6 @@ public class MiracleTopRecipePool {
             if (stack != null) normalized.add(stack);
         }
         return normalized;
-    }
-
-    private static String buildGeneratedVariantRecipeKey(GTRecipe recipe) {
-        StringBuilder key = new StringBuilder();
-        appendNormalizedGeneratedVariantItemKey(key, recipe.mInputs);
-        key.append('|');
-        appendSortedFluidStackKey(key, recipe.mFluidInputs);
-        key.append('|');
-        appendNormalizedGeneratedVariantItemKey(key, recipe.mOutputs);
-        return key.toString();
-    }
-
-    private static void cachePreferredGeneratedVariantRecipe(Map<String, GTRecipe> recipeCache, GTRecipe recipe) {
-        String recipeKey = buildGeneratedVariantRecipeKey(recipe);
-        GTRecipe cachedRecipe = recipeCache.get(recipeKey);
-        if (cachedRecipe == null || isPreferredVariantRecipe(recipe, cachedRecipe)) {
-            recipeCache.put(recipeKey, recipe);
-        }
-    }
-
-    private static void appendNormalizedGeneratedVariantItemKey(StringBuilder key, ItemStack[] stacks) {
-        if (stacks == null || stacks.length == 0) return;
-        ArrayList<String> exactTokens = new ArrayList<>(stacks.length);
-        for (ItemStack stack : stacks) {
-            if (stack == null) continue;
-            int family = getCircuitPartVariantFamily(stack);
-            int rank = getCircuitPartTierRank(stack);
-            if (family >= 0 && rank >= 0) {
-                exactTokens.add("circuitPartFamily" + family + ';');
-            } else {
-                exactTokens.add(buildRecipeExactToken(stack));
-            }
-        }
-        Collections.sort(exactTokens);
-        for (String token : exactTokens) {
-            key.append(token);
-        }
     }
 
     private static void appendSortedFluidStackKey(StringBuilder key, FluidStack[] stacks) {
