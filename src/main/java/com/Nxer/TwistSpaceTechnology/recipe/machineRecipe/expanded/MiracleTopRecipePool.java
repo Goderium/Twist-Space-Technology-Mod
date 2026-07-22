@@ -77,7 +77,7 @@ public class MiracleTopRecipePool {
     public static void loadRecipes() {
         TwistSpaceTechnology.LOG.info("MiracleTopRecipePool loading recipes.");
         initStatics();
-        loadNACRecipes();
+        loadNACRecipes(); // TODO directly run NAC recipes is too OP, additional limitation will be imposed later
         loadCircuitAssemblerRecipes();
         loadCircuitAssemblyLineRecipes();
         loadAssemblyLineRecipes();
@@ -213,6 +213,58 @@ public class MiracleTopRecipePool {
         for (GTRecipe aRecipe : generatedRecipes) {
             addRecipeMT(
                 addIntegratedCircuitToRecipe(reduplicateRecipe(ModifyRecipe(aRecipe, true), 3, 3, 4, 4, 1, 3), 16));
+        }
+    }
+
+    private static void loadNACRecipes() {
+        List<GTRecipe> generatedRecipes = new ArrayList<>();
+        for (GTRecipe aRecipe : RecipeMaps.nanochipAssemblyMatrixRecipes.getAllRecipes()) {
+            for (GTRecipe recipeVariant : expandPreferredRecipeVariants(aRecipe, true)) {
+                GTRecipe unwrappedRecipe = unwrapNACRecipe(recipeVariant);
+                ItemStack output = unwrappedRecipe.mOutputs[0];
+                if (getNACComponent(output) != null) continue;
+
+                generatedRecipes.add(
+                    new GTRecipe(
+                        false,
+                        unwrappedRecipe.mInputs,
+                        new ItemStack[] { output },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        unwrappedRecipe.mFluidInputs,
+                        null,
+                        unwrappedRecipe.mDuration,
+                        unwrappedRecipe.mEUt,
+                        0));
+            }
+        }
+
+        generatedRecipes = selectPreferredCircuitRecipes(generatedRecipes);
+
+        for (GTRecipe cachedRecipe : generatedRecipes) {
+            addRecipeMT(addIntegratedCircuitToRecipe(ModifyRecipe(cachedRecipe), 4));
+        }
+    }
+
+    private static void loadSpaceAssemblerRecipes() {
+        HashSet<TST_ItemID> generateRecipeOutputs = new HashSet<>();
+        generateRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("OpenComputers", "item", 1, 39)));
+        generateRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Optically_Perfected_CPU.get(1)));
+        generateRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Optically_Compatible_Memory.get(1)));
+        List<GTRecipe> generatedRecipes = new ArrayList<>();
+        for (GTRecipe aRecipe : spaceAssemblerRecipes.getAllRecipes()) {
+            if (generateRecipeOutputs.contains(TST_ItemID.createNoNBT(aRecipe.mOutputs[0]))) {
+                generatedRecipes.addAll(expandPreferredRecipeVariants(aRecipe, false));
+            }
+        }
+
+        generatedRecipes = selectPreferredCircuitRecipes(generatedRecipes);
+
+        for (GTRecipe aRecipe : generatedRecipes) {
+            addRecipeMT(addIntegratedCircuitToRecipe(reduplicateRecipe(ModifyRecipe(aRecipe), 4, 1), 16));
         }
     }
 
@@ -360,59 +412,6 @@ public class MiracleTopRecipePool {
                             4));
                 }
             }
-        }
-    }
-
-    private static void loadNACRecipes() {
-        List<GTRecipe> generatedRecipes = new ArrayList<>();
-        for (GTRecipe aRecipe : RecipeMaps.nanochipAssemblyMatrixRecipes.getAllRecipes()) {
-            for (GTRecipe recipeVariant : expandPreferredRecipeVariants(aRecipe, true)) {
-                GTRecipe unwrappedRecipe = unwrapNACRecipe(recipeVariant);
-                ItemStack output = unwrappedRecipe.mOutputs[0];
-                if (getNACComponent(output) != null) continue;
-
-                generatedRecipes.add(
-                    new GTRecipe(
-                        false,
-                        unwrappedRecipe.mInputs,
-                        new ItemStack[] { output },
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        unwrappedRecipe.mFluidInputs,
-                        null,
-                        unwrappedRecipe.mDuration,
-                        unwrappedRecipe.mEUt,
-                        0));
-            }
-        }
-
-        generatedRecipes = selectPreferredCircuitRecipes(generatedRecipes);
-
-        for (GTRecipe cachedRecipe : generatedRecipes) {
-            addRecipeMT(
-                addIntegratedCircuitToRecipe(reduplicateRecipe(ModifyRecipe(cachedRecipe), 3, 3, 4, 4, 1, 3), 4));
-        }
-    }
-
-    private static void loadSpaceAssemblerRecipes() {
-        HashSet<TST_ItemID> generateRecipeOutputs = new HashSet<>();
-        generateRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("OpenComputers", "item", 1, 39)));
-        generateRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Optically_Perfected_CPU.get(1)));
-        generateRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Optically_Compatible_Memory.get(1)));
-        List<GTRecipe> generatedRecipes = new ArrayList<>();
-        for (GTRecipe aRecipe : spaceAssemblerRecipes.getAllRecipes()) {
-            if (generateRecipeOutputs.contains(TST_ItemID.createNoNBT(aRecipe.mOutputs[0]))) {
-                generatedRecipes.addAll(expandPreferredRecipeVariants(aRecipe, false));
-            }
-        }
-
-        generatedRecipes = selectPreferredCircuitRecipes(generatedRecipes);
-
-        for (GTRecipe aRecipe : generatedRecipes) {
-            addRecipeMT(addIntegratedCircuitToRecipe(reduplicateRecipe(ModifyRecipe(aRecipe), 4, 1), 16));
         }
     }
 
@@ -672,7 +671,7 @@ public class MiracleTopRecipePool {
 
         if (recipe.mInputs != null) {
             for (ItemStack input : recipe.mInputs) {
-                NACUnwrapResult result = unwrapNACInputStack(input, new HashSet<>(), recipe.mEUt);
+                NACUnwrapResult result = unwrapNACInputStack(input, new HashSet<>());
                 result.appendTo(unwrappedInputs, extraFluids);
                 extraDuration += result.extraDuration;
             }
@@ -706,7 +705,7 @@ public class MiracleTopRecipePool {
             0);
     }
 
-    private static NACUnwrapResult unwrapNACInputStack(ItemStack stack, HashSet<String> visiting, int targetRecipeEUt) {
+    private static NACUnwrapResult unwrapNACInputStack(ItemStack stack, HashSet<String> visiting) {
         if (stack == null) return NACUnwrapResult.empty();
 
         CircuitComponent component = getNACComponent(stack);
@@ -731,15 +730,14 @@ public class MiracleTopRecipePool {
 
             ArrayList<ItemStack> itemInputs = new ArrayList<>();
             ArrayList<FluidStack> fluidInputs = new ArrayList<>();
-            // Scale wrapped sub-step time against the final target recipe tier before folding it back in.
-            int duration = scaleUnwrapDuration(subRecipe.mDuration * multiplier, subRecipe.mEUt, targetRecipeEUt);
+            // NAC sub-step time is folded into the final recipe directly, without voltage-tier reduction.
+            int duration = subRecipe.mDuration * multiplier;
 
             if (subRecipe.mInputs != null) {
                 for (ItemStack subInput : subRecipe.mInputs) {
                     NACUnwrapResult childResult = unwrapNACInputStack(
                         copyAmountUnsafe(subInput.stackSize * multiplier, subInput),
-                        visiting,
-                        targetRecipeEUt);
+                        visiting);
                     childResult.appendTo(itemInputs, fluidInputs);
                     duration += childResult.extraDuration;
                 }
@@ -771,22 +769,6 @@ public class MiracleTopRecipePool {
             }
         }
         return null;
-    }
-
-    private static int scaleUnwrapDuration(int duration, int recipeEUt, int targetRecipeEUt) {
-        if (duration <= 0 || recipeEUt <= 0 || targetRecipeEUt <= 0) return duration;
-
-        int recipeTier = getRecipeVoltageTier(recipeEUt);
-        int targetTier = getRecipeVoltageTier(targetRecipeEUt);
-        int tierDiff = targetTier - recipeTier;
-        if (tierDiff <= 0) return duration;
-
-        long scaledDuration = duration;
-        for (int i = 0; i < tierDiff; i++) {
-            scaledDuration = (scaledDuration + 1L) / 2L;
-            if (scaledDuration <= 1L) return 1;
-        }
-        return (int) scaledDuration;
     }
 
     @Desugar
@@ -843,12 +825,6 @@ public class MiracleTopRecipePool {
             this(original, wrapped, group, -1);
         }
 
-    }
-
-    private static int getRecipeVoltageTier(int eut) {
-        if (eut <= 0) return -1;
-        if (eut <= 8) return 0;
-        return (int) Math.floor(Math.log(eut / 8.0D) / Math.log(4.0D)) + 1;
     }
 
     private static GTRecipe preprocessCircuitAssemblyLineRecipe(GTRecipe recipe) {
