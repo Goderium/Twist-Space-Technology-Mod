@@ -15,6 +15,8 @@ import com.Nxer.TwistSpaceTechnology.common.machine.TST_CleanRoom;
 // spotless:off
 public class Config {
     // region Regions enum
+    public static final String VERSION = "00_Version";
+    public static final String KEY_CURRENT_VERSION = "CurrentVersion";
     public static final String GENERAL = "General";
     public static final String DEBUG = "Debug";
     public static final String NETWORK = "Network";
@@ -567,8 +569,19 @@ public class Config {
     public static boolean Debug_remove_sciencenotleisure_CompressedStargateTier7_ExtremeRecipe = true;
     // endregion
 
+    public static String CurrentVersion = "";
+
     public static void synchronizeConfiguration(File configFile) {
         Configuration configuration = new Configuration(configFile);
+
+        // region Version
+        // LanguageManager owns the refresh logic; Config only creates and reads the persisted version marker.
+        CurrentVersion = configuration.getString(
+            KEY_CURRENT_VERSION,
+            VERSION,
+            CurrentVersion,
+            "Last Twist Space Technology version that refreshed GregTech.lang.");
+        // endregion
 
         // region General
         MAX_PARALLEL_LIMIT = configuration.getInt("MAX_PARALLEL_LIMIT", GENERAL, MAX_PARALLEL_LIMIT, 1, Integer.MAX_VALUE, "Max parallel limit of normal machines.");
