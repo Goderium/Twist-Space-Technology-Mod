@@ -1,13 +1,18 @@
 package com.Nxer.TwistSpaceTechnology.common.material;
 
 import static bartworks.util.BWUtil.subscriptNumbers;
+import static gregtech.api.util.GTLanguageManager.addStringLocalization;
+
+import java.util.Locale;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.Nxer.TwistSpaceTechnology.config.Config;
 
 import bartworks.system.material.Werkstoff;
+import cpw.mods.fml.common.FMLCommonHandler;
 import gregtech.api.enums.Materials;
+import gregtech.api.enums.OrePrefixes;
 import gregtech.api.enums.TextureSet;
 
 /**
@@ -182,5 +187,44 @@ public class MaterialPool implements Runnable {
         // gf.addPrefix(prefix);
         // }
         // gf.removePrefix(OrePrefixes.ore);
+    }
+
+    public static void initMaterialLocalizations() {
+        if (!isZhCN()) return;
+
+        addWerkstoffLocalization(HolmiumGarnet, "钬石榴石");
+        addWerkstoffLocalization(PureMana, "至纯魔力");
+        addWerkstoffLocalization(LiquidMana, "液态魔力");
+        addWerkstoffLocalization(PurifiedMana, "纯净魔力");
+        addWerkstoffLocalization(StabiliseVoidMatter, "稳定虚空物质");
+        addWerkstoffLocalization(LiquidStargate, "液态星门");
+        addWerkstoffLocalization(ConcentratedUUMatter, "浓缩UU物质");
+        addWerkstoffLocalization(EntropicFlux, "高能维度熵流体");
+        addWerkstoffFormulaLocalization(EntropicFlux, "熵的起源");
+        addWerkstoffLocalization(ChronoentropicFlux, "时空湮灭维度熵流体");
+        addWerkstoffFormulaLocalization(ChronoentropicFlux, "熵增");
+    }
+
+    private static void addWerkstoffLocalization(Werkstoff werkstoff, String localizedName) {
+        addStringLocalization(werkstoff.getLocalizedNameKey(), localizedName);
+
+        String fluidName = werkstoff.getDefaultName()
+            .toLowerCase(Locale.ENGLISH);
+        if (werkstoff.hasItemType(OrePrefixes.cellMolten)) {
+            addStringLocalization("fluid.molten." + fluidName, "熔融" + localizedName);
+        }
+        if (werkstoff.hasItemType(OrePrefixes.cell)) {
+            addStringLocalization("fluid." + fluidName, localizedName);
+        }
+    }
+
+    private static void addWerkstoffFormulaLocalization(Werkstoff werkstoff, String localizedFormula) {
+        addStringLocalization(werkstoff.getLocalizedNameKey() + ".ChemicalFormula", localizedFormula);
+    }
+
+    private static boolean isZhCN() {
+        return FMLCommonHandler.instance()
+            .getCurrentLanguage()
+            .equals("zh_CN");
     }
 }
