@@ -311,6 +311,9 @@ public class TST_AdvCircuitAssemblyLine extends GTCM_MultiMachineBase<TST_AdvCir
                 }
 
                 // Check imprint hatch
+                if (mCircuitImprintHatches.isEmpty()) {
+                    return CheckRecipeResultRegistry.NO_RECIPE;
+                }
                 circuitType = mCircuitImprintHatches.get(0)
                     .getStoredCircuitImprints();
                 if (circuitType.contains(TST_ItemID.create(recipe.mOutputs[0]))) {
