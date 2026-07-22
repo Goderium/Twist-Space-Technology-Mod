@@ -124,7 +124,7 @@ public class TST_AdvCircuitAssemblyLine extends GTCM_MultiMachineBase<TST_AdvCir
                     buildHatchAdder(TST_AdvCircuitAssemblyLine.class).atLeast(Energy.or(ExoticEnergy))
                         .casingIndex(16)
                         .hint(2)
-                        .buildAndChain(GregTechAPI.sBlockCasings2, 6))
+                        .buildAndChain(GregTechAPI.sBlockCasings2, 8))
                 .addElement('E', ofBlock(GregTechAPI.sBlockCasings2, 9))
                 .addElement('F', ofBlock(GregTechAPI.sBlockCasings3, 10))
                 .addElement(
