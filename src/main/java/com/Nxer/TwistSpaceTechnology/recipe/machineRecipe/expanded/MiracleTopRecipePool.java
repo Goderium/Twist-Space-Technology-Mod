@@ -20,10 +20,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -41,6 +43,7 @@ import com.Nxer.TwistSpaceTechnology.util.rewrites.TST_ItemID;
 import com.dreammaster.item.NHItemList;
 import com.github.bsideup.jabel.Desugar;
 
+import bartworks.API.recipe.BartWorksRecipeMaps;
 import bartworks.util.BWUtil;
 import goodgenerator.items.GGMaterial;
 import gregtech.api.enums.GTValues;
@@ -63,34 +66,37 @@ import gtPlusPlus.xmod.gregtech.api.enums.GregtechItemList;
 public class MiracleTopRecipePool {
 
     private static final RecipeMap<?> MT = GTCMRecipe.MiracleTopRecipes;
-    private static final RecipeMap<?>[] NAC_UNWRAP_RECIPE_MAPS = new RecipeMap<?>[] {
-        RecipeMaps.nanochipSMDProcessorRecipes, RecipeMaps.nanochipBoardProcessorRecipes,
-        RecipeMaps.nanochipEtchingArray, RecipeMaps.nanochipCuttingChamber, RecipeMaps.nanochipWireTracer,
-        RecipeMaps.nanochipSuperconductorSplitter, RecipeMaps.nanochipOpticalOrganizer,
-        RecipeMaps.nanochipEncasementWrapper, RecipeMaps.nanochipBiologicalCoordinator };
+    private static RecipeMap<?>[] NAC_UNWRAP_RECIPE_MAPS;
     public static final HashMap<ItemStack, ItemStack> circuitItemsToWrapped = new HashMap<>();
     private static final HashSet<Materials> superConductorMaterialList = new HashSet<>();
     private static final HashSet<OrePrefixes> targetModifyOreDict = new HashSet<>();
     private static final HashSet<String> circuitGTOreDict = new HashSet<>();
     private static final HashMap<ItemStack, FluidStack> specialMaterialCantAutoModify = new HashMap<>();
-    private static ItemList[][] circuitPartVariants;
-    private static WrappedCircuitItem[][] wrappedCircuitPartVariants;
+    private static CircuitItemVariant[] circuitItems;
 
     public static void loadRecipes() {
         TwistSpaceTechnology.LOG.info("MiracleTopRecipePool loading recipes.");
         initStatics();
-        // loadNACRecipes();
+        loadNACRecipes();
         loadCircuitAssemblerRecipes();
-        // loadAssemblyLineRecipes();
-        // loadSpaceAssemblerRecipes();
+        loadCircuitAssemblyLineRecipes();
+        loadAssemblyLineRecipes();
+        loadSpaceAssemblerRecipes();
         // loadCustomRecipes();
     }
 
     private static void loadCircuitAssemblerRecipes() {
         HashSet<TST_ItemID> IgnoreRecipeOutputs = new HashSet<>();
-
-        IgnoreRecipeOutputs
-            .add(TST_ItemID.createNoNBT(getModItem("appliedenergistics2", "item.ItemMultiPart", 1, 220)));
+        // spotless:off
+        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("appliedenergistics2", "item.ItemMultiPart", 1, 220)));
+        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("appliedenergistics2", "item.ItemMultiPart", 1, 461)));
+        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("appliedenergistics2", "item.ItemMultiPart", 1, 462)));
+        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("appliedenergistics2", "item.ItemMultiPart", 1, 463)));
+        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("appliedenergistics2", "item.ItemMultiPart", 1, 466)));
+        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("appliedenergistics2", "item.ItemMultiPart", 1, 467)));
+        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("appliedenergistics2", "item.ItemMultiPart", 1, 468)));
+        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("appliedenergistics2", "item.ItemMultiPart", 1, 470)));
+        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("appliedenergistics2", "item.ItemMultiPart", 1, 472)));
         IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("ae2fc", "part_fluid_storage_bus", 1)));
         IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("dreamcraft", "SchematicsAstroMiner", 1)));
         IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("dreamcraft", "SchematicsMoonBuggy", 1)));
@@ -106,19 +112,11 @@ public class MiracleTopRecipePool {
         IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(tectech.thing.CustomItemList.parametrizerMemory.get(1)));
         IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Board_Wetware.get(1)));
         IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Board_Bio.get(1)));
-        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Crystalprocessor.get(1)));
-        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Crystalcomputer.get(1)));
-        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Ultimatecrystalcomputer.get(1)));
-        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Crystalmainframe.get(1)));
-        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Neuroprocessor.get(1)));
-        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Wetwarecomputer.get(1)));
-        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Wetwaresupercomputer.get(1)));
-        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Bioprocessor.get(1)));
-        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Biowarecomputer.get(1)));
-        IgnoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_OpticalProcessor.get(1)));
+        // spotless:on
 
         // Exclude low-level solder recipe
-        ArrayList<GTRecipe> recipeCache = new ArrayList<>();
+        List<GTRecipe> generatedRecipes = new ArrayList<>();
+        Map<GTRecipe, Integer> integratedCircuitMap = new IdentityHashMap<>();
         for (GTRecipe originalRecipe : circuitAssemblerRecipes.getAllRecipes()) {
             if (IgnoreRecipeOutputs.contains(TST_ItemID.createNoNBT(originalRecipe.mOutputs[0]))) continue;
             // Do not generate some Mod recipe
@@ -135,35 +133,87 @@ public class MiracleTopRecipePool {
             if (hasCircuitOreDict(originalRecipe.mOutputs[0])) continue;
 
             for (GTRecipe recipeVariant : expandPreferredRecipeVariants(originalRecipe, false)) {
-                GTRecipe recipeCopy = recipeVariant.copy();
-                if (recipeCopy.mFluidInputs != null && recipeCopy.mFluidInputs.length > 0) {
-                    FluidStack recipeFluid = recipeCopy.mFluidInputs[0];
-                    if (recipeFluid.isFluidEqual(Materials.Lead.getMolten(1)))
-                        recipeFluid = Materials.SolderingAlloy.getMolten(recipeFluid.amount / 4);
-                    else if (recipeFluid.isFluidEqual(Materials.Tin.getMolten(1)))
-                        recipeFluid = Materials.SolderingAlloy.getMolten(recipeFluid.amount / 2);
-                    recipeCopy.mFluidInputs[0] = recipeFluid;
+                GTRecipe recipeCopy = new GTRecipe(
+                    false,
+                    removeIntegratedCircuitFromStacks(recipeVariant.mInputs),
+                    recipeVariant.mOutputs == null ? null : recipeVariant.mOutputs.clone(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    recipeVariant.mFluidInputs == null ? null : recipeVariant.mFluidInputs.clone(),
+                    recipeVariant.mFluidOutputs == null ? null : recipeVariant.mFluidOutputs.clone(),
+                    recipeVariant.mDuration,
+                    recipeVariant.mEUt,
+                    0);
+                int integratedCircuitNum = 16;
+                if (recipeVariant.mInputs != null) {
+                    for (ItemStack itemStack : recipeVariant.mInputs) {
+                        if (itemStack.getItem() == ItemList.Circuit_Integrated.getItem()) {
+                            integratedCircuitNum += itemStack.getItemDamage();
+                            if (integratedCircuitNum > 24) integratedCircuitNum -= 24;
+                            break;
+                        }
+                    }
                 }
-                cachePreferredVariantRecipe(recipeCache, recipeCopy);
+                integratedCircuitMap.put(recipeCopy, integratedCircuitNum);
+                generatedRecipes.add(recipeCopy);
             }
         }
 
-        for (GTRecipe aRecipe : recipeCache) {
-            int IntegratedCircuitNum = 16;
-            for (ItemStack aStack : aRecipe.mInputs) {
-                if (aStack.getItem() == ItemList.Circuit_Integrated.getItem()) {
-                    IntegratedCircuitNum += aStack.getItemDamage();
-                    if (IntegratedCircuitNum > 24) IntegratedCircuitNum -= 24;
-                    break;
-                }
-            }
+        generatedRecipes = selectPreferredCircuitRecipes(generatedRecipes);
 
+        for (GTRecipe aRecipe : generatedRecipes) {
             addRecipeMT(
                 addIntegratedCircuitToRecipe(
                     reduplicateRecipe(ModifyRecipe(aRecipe, true), 3, 3, 4, 4, 1, 3),
-                    IntegratedCircuitNum));
+                    integratedCircuitMap.getOrDefault(aRecipe, 16)));
         }
 
+    }
+
+    private static void loadCircuitAssemblyLineRecipes() {
+        HashSet<TST_ItemID> ignoreRecipeOutputs = new HashSet<>();
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Crystalprocessor.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Crystalcomputer.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Ultimatecrystalcomputer.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Crystalmainframe.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Neuroprocessor.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Wetwarecomputer.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Wetwaresupercomputer.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Wetwaremainframe.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Bioprocessor.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Biowarecomputer.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Biowaresupercomputer.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_Biomainframe.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_OpticalProcessor.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_OpticalAssembly.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_OpticalComputer.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Circuit_OpticalMainframe.get(1)));
+        ignoreRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.HighEnergyFlowCircuit.get(1)));
+
+        List<GTRecipe> generatedRecipes = new ArrayList<>();
+        for (GTRecipe originalRecipe : BartWorksRecipeMaps.circuitAssemblyLineRecipes.getAllRecipes()) {
+            if (originalRecipe == null || originalRecipe.mOutputs == null
+                || originalRecipe.mOutputs.length == 0
+                || ignoreRecipeOutputs.contains(TST_ItemID.createNoNBT(originalRecipe.mOutputs[0]))) continue;
+
+            String itemName = Item.itemRegistry.getNameForObject(originalRecipe.mOutputs[0].getItem());
+            if (itemName == null || itemName.contains(Mods.Railcraft.ID) || itemName.contains(Mods.Forestry.ID))
+                continue;
+
+            for (GTRecipe recipeVariant : expandPreferredRecipeVariants(originalRecipe, false)) {
+                generatedRecipes.add(preprocessCircuitAssemblyLineRecipe(recipeVariant));
+            }
+        }
+
+        generatedRecipes = selectPreferredCircuitRecipes(generatedRecipes);
+
+        for (GTRecipe aRecipe : generatedRecipes) {
+            addRecipeMT(
+                addIntegratedCircuitToRecipe(reduplicateRecipe(ModifyRecipe(aRecipe, true), 3, 3, 4, 4, 1, 3), 16));
+        }
     }
 
     private static void loadAssemblyLineRecipes() {
@@ -314,15 +364,14 @@ public class MiracleTopRecipePool {
     }
 
     private static void loadNACRecipes() {
-        Map<String, GTRecipe> recipeCache = new LinkedHashMap<>();
+        List<GTRecipe> generatedRecipes = new ArrayList<>();
         for (GTRecipe aRecipe : RecipeMaps.nanochipAssemblyMatrixRecipes.getAllRecipes()) {
             for (GTRecipe recipeVariant : expandPreferredRecipeVariants(aRecipe, true)) {
                 GTRecipe unwrappedRecipe = unwrapNACRecipe(recipeVariant);
                 ItemStack output = unwrappedRecipe.mOutputs[0];
                 if (getNACComponent(output) != null) continue;
 
-                cachePreferredRecipe(
-                    recipeCache,
+                generatedRecipes.add(
                     new GTRecipe(
                         false,
                         unwrappedRecipe.mInputs,
@@ -336,13 +385,15 @@ public class MiracleTopRecipePool {
                         null,
                         unwrappedRecipe.mDuration,
                         unwrappedRecipe.mEUt,
-                        0),
-                    true);
+                        0));
             }
         }
 
-        for (GTRecipe cachedRecipe : recipeCache.values()) {
-            addRecipeMT(addIntegratedCircuitToRecipe(ModifyRecipe(cachedRecipe), 4));
+        generatedRecipes = selectPreferredCircuitRecipes(generatedRecipes);
+
+        for (GTRecipe cachedRecipe : generatedRecipes) {
+            addRecipeMT(
+                addIntegratedCircuitToRecipe(reduplicateRecipe(ModifyRecipe(cachedRecipe), 3, 3, 4, 4, 1, 3), 4));
         }
     }
 
@@ -351,15 +402,16 @@ public class MiracleTopRecipePool {
         generateRecipeOutputs.add(TST_ItemID.createNoNBT(getModItem("OpenComputers", "item", 1, 39)));
         generateRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Optically_Perfected_CPU.get(1)));
         generateRecipeOutputs.add(TST_ItemID.createNoNBT(ItemList.Optically_Compatible_Memory.get(1)));
-        Map<String, GTRecipe> recipeCache = new LinkedHashMap<>();
+        List<GTRecipe> generatedRecipes = new ArrayList<>();
         for (GTRecipe aRecipe : spaceAssemblerRecipes.getAllRecipes()) {
             if (generateRecipeOutputs.contains(TST_ItemID.createNoNBT(aRecipe.mOutputs[0]))) {
-                for (GTRecipe recipeVariant : expandPreferredRecipeVariants(aRecipe, false)) {
-                    cachePreferredRecipe(recipeCache, recipeVariant, true);
-                }
+                generatedRecipes.addAll(expandPreferredRecipeVariants(aRecipe, false));
             }
         }
-        for (GTRecipe aRecipe : recipeCache.values()) {
+
+        generatedRecipes = selectPreferredCircuitRecipes(generatedRecipes);
+
+        for (GTRecipe aRecipe : generatedRecipes) {
             addRecipeMT(addIntegratedCircuitToRecipe(reduplicateRecipe(ModifyRecipe(aRecipe), 4, 1), 16));
         }
     }
@@ -383,18 +435,19 @@ public class MiracleTopRecipePool {
             for (ItemStack aStack : removeIntegratedCircuitFromStacks(baseRecipe.mInputs)) {
                 boolean isItemModified = false;
                 boolean isNeedTraverse = true;
-                for (Map.Entry<ItemStack, ItemStack> entry : circuitItemsToWrapped.entrySet()) {
-                    if (GTUtility.areStacksEqual(entry.getKey(), aStack)) {
-                        inputItems.add(copyAmountUnsafe(aStack.stackSize, entry.getValue()));
-                        isItemModified = true;
-                        break;
-                    }
+
+                // Circuit parts are wrapped first; wrapped items keep the recipe compact without changing ratios.
+                ItemStack wrappedCircuitStack = wrapCircuitComponent(aStack);
+                if (wrappedCircuitStack != null) {
+                    inputItems.add(copyAmountUnsafe(aStack.stackSize, wrappedCircuitStack));
+                    isItemModified = true;
                 }
 
                 if (!isItemModified && BWUtil.checkStackAndPrefix(aStack)) {
                     ItemData Data = Objects.requireNonNull(GTOreDictUnificator.getAssociation(aStack));
                     Materials Material = Data.mMaterial.mMaterial;
                     OrePrefixes OreDict = Data.mPrefix;
+                    // Melt standard GT material parts into fluids, but keep special superconductors as packed wires.
                     if (Material.getMolten(1) != null && targetModifyOreDict.contains(OreDict)) {
                         if (Material == Materials.TengamAttuned) Material = Materials.TengamPurified;
                         inputFluids.add(
@@ -413,7 +466,7 @@ public class MiracleTopRecipePool {
                 }
 
                 if (!isItemModified && isNeedTraverse) {
-                    // It's better to determine whether it contains ore dict
+                    // Fallback for non-GT items whose molten material cannot be inferred from ore dict data.
                     for (Map.Entry<ItemStack, FluidStack> entry : specialMaterialCantAutoModify.entrySet()) {
                         if (GTUtility.areStacksEqual(entry.getKey(), aStack)) {
                             inputFluids
@@ -428,10 +481,12 @@ public class MiracleTopRecipePool {
             }
 
         }
+        ItemStack outputStack = baseRecipe.mOutputs[0];
+        outputStack = copyAmountUnsafe(outputStack.stackSize * 16, outputStack);
         return new GTRecipe(
             false,
             mergeSameItem(inputItems.toArray(new ItemStack[0])),
-            new ItemStack[] { copyAmountUnsafe(baseRecipe.mOutputs[0].stackSize * 16, baseRecipe.mOutputs[0]) },
+            new ItemStack[] { outputStack },
             null,
             null,
             null,
@@ -439,7 +494,7 @@ public class MiracleTopRecipePool {
             null,
             mergeSameFluid(inputFluids.toArray(new FluidStack[0])),
             null,
-            baseRecipe.mDuration * 12,
+            baseRecipe.mDuration * 3,
             baseRecipe.mEUt,
             0);
     }
@@ -576,6 +631,40 @@ public class MiracleTopRecipePool {
             .addTo(MT);
     }
 
+    /**
+     * NAC stores inputs as fake items identified by CircuitComponent metadata.
+     * For regular processed parts and nested circuit tiers, restore the backing real item so the existing MT
+     * conversion logic can keep working. NAC-only special intermediates without a real backing item stay untouched.
+     */
+    private static ItemStack tryUnwrapNACComponent(ItemStack stack) {
+        CircuitComponent component = getNACComponent(stack);
+        if (component == null) return stack;
+
+        if (component.isProcessed && component.componentForProcessed != null) {
+            component = component.componentForProcessed.get();
+        }
+
+        if (component == null || component.realComponent == null) return stack;
+
+        ItemStack realStack = component.realComponent.get();
+        if (realStack == null) {
+            realStack = switch (component) {
+                case ProcessedPicoCircuitCasing -> NHItemList.PikoCircuit.get(1);
+                case ProcessedQuantumCircuitCasing -> NHItemList.QuantumCircuit.get(1);
+                case ProcessedPlanckCircuitCasing -> getModItem("dreamcraft", "PlanckCircuit", 1);
+                default -> null;
+            };
+        }
+        if (realStack == null) return stack;
+
+        return copyAmountUnsafe(stack.stackSize, realStack);
+    }
+
+    private static CircuitComponent getNACComponent(ItemStack stack) {
+        if (stack == null || stack.getItem() != CircuitComponentFakeItem.INSTANCE) return null;
+        return CircuitComponent.tryGetFromFakeStack(stack);
+    }
+
     private static GTRecipe unwrapNACRecipe(GTRecipe recipe) {
         ArrayList<ItemStack> unwrappedInputs = new ArrayList<>();
         ArrayList<FluidStack> extraFluids = new ArrayList<>();
@@ -584,8 +673,7 @@ public class MiracleTopRecipePool {
         if (recipe.mInputs != null) {
             for (ItemStack input : recipe.mInputs) {
                 NACUnwrapResult result = unwrapNACInputStack(input, new HashSet<>(), recipe.mEUt);
-                Collections.addAll(unwrappedInputs, result.itemInputs);
-                Collections.addAll(extraFluids, result.fluidInputs);
+                result.appendTo(unwrappedInputs, extraFluids);
                 extraDuration += result.extraDuration;
             }
         }
@@ -652,8 +740,7 @@ public class MiracleTopRecipePool {
                         copyAmountUnsafe(subInput.stackSize * multiplier, subInput),
                         visiting,
                         targetRecipeEUt);
-                    Collections.addAll(itemInputs, childResult.itemInputs);
-                    Collections.addAll(fluidInputs, childResult.fluidInputs);
+                    childResult.appendTo(itemInputs, fluidInputs);
                     duration += childResult.extraDuration;
                 }
             }
@@ -672,40 +759,6 @@ public class MiracleTopRecipePool {
         } finally {
             visiting.remove(visitKey);
         }
-    }
-
-    /**
-     * NAC stores inputs as fake items identified by CircuitComponent metadata.
-     * For regular processed parts and nested circuit tiers, restore the backing real item so the existing MT
-     * conversion logic can keep working. NAC-only special intermediates without a real backing item stay untouched.
-     */
-    private static ItemStack tryUnwrapNACComponent(ItemStack stack) {
-        CircuitComponent component = getNACComponent(stack);
-        if (component == null) return stack;
-
-        if (component.isProcessed && component.componentForProcessed != null) {
-            component = component.componentForProcessed.get();
-        }
-
-        if (component == null || component.realComponent == null) return stack;
-
-        ItemStack realStack = component.realComponent.get();
-        if (realStack == null) {
-            realStack = switch (component) {
-                case ProcessedPicoCircuitCasing -> NHItemList.PikoCircuit.get(1);
-                case ProcessedQuantumCircuitCasing -> NHItemList.QuantumCircuit.get(1);
-                case ProcessedPlanckCircuitCasing -> getModItem("dreamcraft", "PlanckCircuit", 1);
-                default -> null;
-            };
-        }
-        if (realStack == null) return stack;
-
-        return copyAmountUnsafe(stack.stackSize, realStack);
-    }
-
-    private static CircuitComponent getNACComponent(ItemStack stack) {
-        if (stack == null || stack.getItem() != CircuitComponentFakeItem.INSTANCE) return null;
-        return CircuitComponent.tryGetFromFakeStack(stack);
     }
 
     private static GTRecipe findNACUnwrapRecipe(ItemStack output) {
@@ -733,7 +786,63 @@ public class MiracleTopRecipePool {
             scaledDuration = (scaledDuration + 1L) / 2L;
             if (scaledDuration <= 1L) return 1;
         }
-        return (int) Math.max(1L, scaledDuration);
+        return (int) scaledDuration;
+    }
+
+    @Desugar
+    private record NACUnwrapResult(ItemStack[] itemInputs, FluidStack[] fluidInputs, int extraDuration) {
+
+        private static final NACUnwrapResult EMPTY = new NACUnwrapResult(new ItemStack[0], new FluidStack[0], 0);
+
+        private static NACUnwrapResult empty() {
+            return EMPTY;
+        }
+
+        private static NACUnwrapResult of(ItemStack stack) {
+            return new NACUnwrapResult(
+                stack == null ? new ItemStack[0] : new ItemStack[] { stack },
+                new FluidStack[0],
+                0);
+        }
+
+        private void appendTo(List<ItemStack> itemList, List<FluidStack> fluidList) {
+            Collections.addAll(itemList, itemInputs);
+            Collections.addAll(fluidList, fluidInputs);
+        }
+    }
+
+    // Groups define which items compete with each other during tier-based deduplication.
+    private enum CircuitItemGroup {
+
+        // NONE entries are still wrapped/unwrapped, but never used for tier preference.
+        NONE(false),
+        BOARD(true),
+        RESISTOR(true),
+        DIODE(true),
+        TRANSISTOR(true),
+        CAPACITOR(true),
+        INDUCTOR(true);
+
+        private final boolean rankedVariantGroup;
+
+        CircuitItemGroup(boolean rankedVariantGroup) {
+            this.rankedVariantGroup = rankedVariantGroup;
+        }
+
+        private boolean isRankedVariantGroup() {
+            return rankedVariantGroup;
+        }
+    }
+
+    // Single source of truth for wrapped item lookup and tier comparison metadata.
+    @Desugar
+    private record CircuitItemVariant(ItemStack original, WrappedCircuitItem wrapped, CircuitItemGroup group,
+        int tier) {
+
+        private CircuitItemVariant(ItemStack original, WrappedCircuitItem wrapped, CircuitItemGroup group) {
+            this(original, wrapped, group, -1);
+        }
+
     }
 
     private static int getRecipeVoltageTier(int eut) {
@@ -742,11 +851,262 @@ public class MiracleTopRecipePool {
         return (int) Math.floor(Math.log(eut / 8.0D) / Math.log(4.0D)) + 1;
     }
 
+    private static GTRecipe preprocessCircuitAssemblyLineRecipe(GTRecipe recipe) {
+        ArrayList<ItemStack> inputItems = new ArrayList<>();
+        ItemStack[] inputs = recipe.mInputs == null ? null : removeIntegratedCircuitFromStacks(recipe.mInputs);
+        if (inputs != null) {
+            for (ItemStack stack : inputs) {
+                ItemStack unwrapped = unwrapWrappedCircuitComponent(stack);
+                int amount = unwrapped.stackSize;
+                if (GTUtility.areStacksEqual(unwrapped, stack)) {
+                    amount = amount / 16;
+                }
+
+                inputItems.add(copyAmountUnsafe(amount, unwrapped));
+            }
+        }
+
+        FluidStack[] fluidInputs = recipe.mFluidInputs == null ? null : recipe.mFluidInputs.clone();
+        ItemStack[] outputs = recipe.mOutputs == null ? null : recipe.mOutputs.clone();
+        if (outputs != null) {
+            for (int i = 0; i < outputs.length; i++) {
+                if (outputs[i] != null) {
+                    outputs[i] = copyAmountUnsafe(Math.max(1, outputs[i].stackSize / 16), outputs[i]);
+                }
+            }
+        }
+
+        return new GTRecipe(
+            false,
+            inputItems.toArray(new ItemStack[0]),
+            outputs,
+            null,
+            null,
+            null,
+            null,
+            null,
+            fluidInputs,
+            recipe.mFluidOutputs == null ? null : recipe.mFluidOutputs.clone(),
+            Math.max(1, recipe.mDuration / 3),
+            recipe.mEUt,
+            0);
+    }
+
+    private static List<GTRecipe> selectPreferredCircuitRecipes(List<GTRecipe> recipes) {
+        List<GTRecipe> selectedRecipes = recipes;
+
+        // Step 1: same item/fluid types, but different solder fluids. Keep the best solder.
+        Map<String, GTRecipe> recipeCache = new LinkedHashMap<>();
+        for (GTRecipe recipe : selectedRecipes) {
+            String recipeKey = buildRecipeTypeKey(recipe, null, true, false);
+            GTRecipe cachedRecipe = recipeCache.get(recipeKey);
+            if (cachedRecipe == null || getSolderRank(recipe.mFluidInputs) > getSolderRank(cachedRecipe.mFluidInputs)) {
+                recipeCache.put(recipeKey, recipe);
+            }
+        }
+        selectedRecipes = new ArrayList<>(recipeCache.values());
+
+        // Step 2: same recipe except ranked board/component tiers. Keep the highest complete combination.
+        recipeCache = new LinkedHashMap<>();
+        HashSet<CircuitItemGroup> rankedVariantGroups = new HashSet<>();
+        for (CircuitItemVariant item : circuitItems) {
+            if (item.group()
+                .isRankedVariantGroup()) {
+                rankedVariantGroups.add(item.group());
+            }
+        }
+        for (GTRecipe recipe : selectedRecipes) {
+            String recipeKey = buildRecipeTypeKey(recipe, rankedVariantGroups, false, false);
+            GTRecipe cachedRecipe = recipeCache.get(recipeKey);
+            if (cachedRecipe == null || isPreferredRecipeForGroups(recipe, cachedRecipe, rankedVariantGroups)) {
+                recipeCache.put(recipeKey, recipe);
+            }
+        }
+        selectedRecipes = new ArrayList<>(recipeCache.values());
+
+        // Step 3: copper and annealed copper wires are equivalent choices; prefer annealed copper.
+        recipeCache = new LinkedHashMap<>();
+        for (GTRecipe recipe : selectedRecipes) {
+            String recipeKey = buildRecipeTypeKey(recipe, null, false, true);
+            GTRecipe cachedRecipe = recipeCache.get(recipeKey);
+            if (cachedRecipe == null) {
+                recipeCache.put(recipeKey, recipe);
+                continue;
+            }
+
+            boolean recipeHasAnnealedCopper = false;
+            if (recipe.mInputs != null) {
+                for (ItemStack stack : recipe.mInputs) {
+                    if (!BWUtil.checkStackAndPrefix(stack)) continue;
+                    ItemData data = GTOreDictUnificator.getAssociation(stack);
+                    if (data == null || data.mMaterial == null || data.mMaterial.mMaterial == null) continue;
+                    OrePrefixes prefix = data.mPrefix;
+                    if (prefix != OrePrefixes.wireFine && prefix != OrePrefixes.wireGt01
+                        && prefix != OrePrefixes.wireGt02
+                        && prefix != OrePrefixes.wireGt04
+                        && prefix != OrePrefixes.wireGt08
+                        && prefix != OrePrefixes.wireGt12
+                        && prefix != OrePrefixes.wireGt16) continue;
+                    if (data.mMaterial.mMaterial == Materials.AnnealedCopper) {
+                        recipeHasAnnealedCopper = true;
+                        break;
+                    }
+                }
+            }
+
+            boolean cachedRecipeHasAnnealedCopper = false;
+            if (cachedRecipe.mInputs != null) {
+                for (ItemStack stack : cachedRecipe.mInputs) {
+                    if (!BWUtil.checkStackAndPrefix(stack)) continue;
+                    ItemData data = GTOreDictUnificator.getAssociation(stack);
+                    if (data == null || data.mMaterial == null || data.mMaterial.mMaterial == null) continue;
+                    OrePrefixes prefix = data.mPrefix;
+                    if (prefix != OrePrefixes.wireFine && prefix != OrePrefixes.wireGt01
+                        && prefix != OrePrefixes.wireGt02
+                        && prefix != OrePrefixes.wireGt04
+                        && prefix != OrePrefixes.wireGt08
+                        && prefix != OrePrefixes.wireGt12
+                        && prefix != OrePrefixes.wireGt16) continue;
+                    if (data.mMaterial.mMaterial == Materials.AnnealedCopper) {
+                        cachedRecipeHasAnnealedCopper = true;
+                        break;
+                    }
+                }
+            }
+
+            if (recipeHasAnnealedCopper && !cachedRecipeHasAnnealedCopper) {
+                recipeCache.put(recipeKey, recipe);
+            }
+        }
+        return new ArrayList<>(recipeCache.values());
+    }
+
+    private static String buildRecipeTypeKey(GTRecipe recipe, Set<CircuitItemGroup> ignoredInputGroups,
+        boolean ignoreSolderFluids, boolean normalizeCopperWireMaterial) {
+        // The key compares recipe shapes only: item/fluid types matter, amounts, EUt and duration do not.
+        StringBuilder key = new StringBuilder();
+        appendItemTypes(key, recipe.mOutputs, null, false);
+        key.append('|');
+        appendItemTypes(key, recipe.mInputs, ignoredInputGroups, normalizeCopperWireMaterial);
+        key.append('|');
+        appendFluidTypes(key, recipe.mFluidInputs, ignoreSolderFluids);
+        return key.toString();
+    }
+
+    private static void appendItemTypes(StringBuilder key, ItemStack[] stacks, Set<CircuitItemGroup> ignoredGroups,
+        boolean normalizeCopperWireMaterial) {
+        ArrayList<String> tokens = new ArrayList<>();
+        for (ItemStack stack : uniqueStacksByType(stacks)) {
+            // Ignored groups are the variant axis being selected in the current pass.
+            CircuitItemVariant variant = getCircuitItemVariant(stack);
+            CircuitItemGroup group = variant == null ? CircuitItemGroup.NONE : variant.group();
+            if (ignoredGroups != null && ignoredGroups.contains(group)) continue;
+            String token = null;
+            if (normalizeCopperWireMaterial && BWUtil.checkStackAndPrefix(stack)) {
+                ItemData data = GTOreDictUnificator.getAssociation(stack);
+                if (data != null && data.mMaterial != null && data.mMaterial.mMaterial != null) {
+                    Materials material = data.mMaterial.mMaterial;
+                    if (material == Materials.Copper || material == Materials.AnnealedCopper) {
+                        ItemStack annealedCopperWire = GTOreDictUnificator
+                            .get(data.mPrefix, Materials.AnnealedCopper, 1L);
+                        if (annealedCopperWire != null) {
+                            token = TST_ItemID.createNoNBT(annealedCopperWire) + ";";
+                        }
+                    }
+                }
+            }
+            tokens.add(token != null ? token : TST_ItemID.createNoNBT(stack) + ";");
+        }
+        Collections.sort(tokens);
+        for (String token : tokens) {
+            key.append(token);
+        }
+    }
+
+    private static void appendFluidTypes(StringBuilder key, FluidStack[] stacks, boolean ignoreSolderFluids) {
+        ArrayList<String> tokens = new ArrayList<>();
+        for (FluidStack stack : uniqueFluidsByType(stacks)) {
+            if (ignoreSolderFluids && stack != null
+                && (stack.isFluidEqual(Materials.Lead.getMolten(1)) || stack.isFluidEqual(Materials.Tin.getMolten(1))
+                    || stack.isFluidEqual(Materials.SolderingAlloy.getMolten(1))))
+                continue;
+            if (stack != null) {
+                tokens.add(
+                    stack.getFluid()
+                        .getName() + ';');
+            }
+        }
+        Collections.sort(tokens);
+        for (String token : tokens) {
+            key.append(token);
+        }
+    }
+
+    private static List<ItemStack> uniqueStacksByType(ItemStack[] stacks) {
+        if (stacks == null || stacks.length == 0) return Collections.emptyList();
+        LinkedHashMap<TST_ItemID, ItemStack> uniqueStacks = new LinkedHashMap<>();
+        for (ItemStack stack : stacks) {
+            if (stack == null) continue;
+            uniqueStacks.putIfAbsent(TST_ItemID.createNoNBT(stack), stack);
+        }
+        return new ArrayList<>(uniqueStacks.values());
+    }
+
+    private static List<FluidStack> uniqueFluidsByType(FluidStack[] stacks) {
+        if (stacks == null || stacks.length == 0) return Collections.emptyList();
+        LinkedHashMap<String, FluidStack> uniqueFluids = new LinkedHashMap<>();
+        for (FluidStack stack : stacks) {
+            if (stack == null) continue;
+            uniqueFluids.putIfAbsent(
+                stack.getFluid()
+                    .getName(),
+                stack);
+        }
+        return new ArrayList<>(uniqueFluids.values());
+    }
+
+    private static boolean isPreferredRecipeForGroups(GTRecipe candidate, GTRecipe cachedRecipe,
+        Set<CircuitItemGroup> groups) {
+        boolean candidateHasHigherTier = false;
+        boolean cachedHasHigherTier = false;
+        for (CircuitItemGroup group : groups) {
+            int candidateRank = getHighestCircuitGroupRank(candidate.mInputs, group);
+            int cachedRank = getHighestCircuitGroupRank(cachedRecipe.mInputs, group);
+            if (candidateRank > cachedRank) candidateHasHigherTier = true;
+            if (cachedRank > candidateRank) cachedHasHigherTier = true;
+        }
+        // Mixed wins and losses mean the recipes are different combinations, so keep both.
+        return candidateHasHigherTier && !cachedHasHigherTier;
+    }
+
+    private static int getHighestCircuitGroupRank(ItemStack[] stacks, CircuitItemGroup group) {
+        if (stacks == null) return -1;
+        int highestRank = -1;
+        for (ItemStack stack : uniqueStacksByType(stacks)) {
+            CircuitItemVariant variant = getCircuitItemVariant(stack);
+            if (variant != null && variant.group() == group && variant.tier() > highestRank) {
+                highestRank = variant.tier();
+            }
+        }
+        return highestRank;
+    }
+
+    private static int getSolderRank(FluidStack[] stacks) {
+        if (stacks == null) return 0;
+        int rank = 0;
+        for (FluidStack stack : stacks) {
+            if (stack == null) continue;
+            if (stack.isFluidEqual(Materials.SolderingAlloy.getMolten(1))) return 3;
+            if (stack.isFluidEqual(Materials.Tin.getMolten(1))) rank = 2;
+            else if (stack.isFluidEqual(Materials.Lead.getMolten(1))) rank = Math.max(rank, 1);
+        }
+        return rank;
+    }
+
     private static List<ItemStack> filterPreferredAlternatives(List<ItemStack> alternatives,
         boolean unwrapNACComponents) {
         if (alternatives == null || alternatives.isEmpty()) return Collections.emptyList();
 
-        boolean containsSuperconductor = false;
         int bestCircuitPartRank = -1;
         ItemStack bestCircuitPart = null;
         List<ItemStack> preservedAlternatives = new ArrayList<>(alternatives.size());
@@ -754,59 +1114,17 @@ public class MiracleTopRecipePool {
         for (ItemStack stack : alternatives) {
             ItemStack unwrapped = unwrapNACComponents ? tryUnwrapNACComponent(stack) : stack;
             preservedAlternatives.add(stack);
-            if (isSuperconductorChoice(unwrapped)) {
-                containsSuperconductor = true;
-            }
 
-            int rank = getCircuitPartTierRank(unwrapped);
+            CircuitItemVariant variant = getCircuitItemVariant(unwrapped);
+            int rank = variant == null ? -1 : variant.tier();
             if (rank > bestCircuitPartRank) {
                 bestCircuitPartRank = rank;
                 bestCircuitPart = stack;
             }
         }
 
-        if (containsSuperconductor) return preservedAlternatives;
         if (bestCircuitPart != null) return Collections.singletonList(bestCircuitPart);
         return preservedAlternatives;
-    }
-
-    private static String buildNormalizedRecipeInputKey(GTRecipe recipe, boolean includeFluids) {
-        StringBuilder key = new StringBuilder();
-        appendNormalizedRecipeKey(key, recipe.mOutputs);
-        key.append('|');
-        appendNormalizedRecipeKey(key, recipe.mInputs);
-        if (includeFluids) {
-            key.append('|');
-            appendSortedFluidStackKey(key, recipe.mFluidInputs);
-        }
-        return key.toString();
-    }
-
-    private static void cachePreferredRecipe(Map<String, GTRecipe> recipeCache, GTRecipe recipe) {
-        cachePreferredRecipe(recipeCache, recipe, false);
-    }
-
-    private static void cachePreferredRecipe(Map<String, GTRecipe> recipeCache, GTRecipe recipe,
-        boolean includeFluids) {
-        String normalizedKey = buildNormalizedRecipeInputKey(recipe, includeFluids);
-        GTRecipe cachedRecipe = recipeCache.get(normalizedKey);
-        if (cachedRecipe == null
-            || getCircuitPartVariantScore(recipe.mInputs) > getCircuitPartVariantScore(cachedRecipe.mInputs)) {
-            recipeCache.put(normalizedKey, recipe);
-        }
-    }
-
-    private static void cachePreferredVariantRecipe(List<GTRecipe> recipeCache, GTRecipe recipe) {
-        for (int i = 0; i < recipeCache.size(); i++) {
-            GTRecipe cachedRecipe = recipeCache.get(i);
-            if (!isSameRecipeExceptCircuitParts(recipe, cachedRecipe)) continue;
-
-            if (isPreferredVariantRecipe(recipe, cachedRecipe)) {
-                recipeCache.set(i, recipe);
-            }
-            return;
-        }
-        recipeCache.add(recipe);
     }
 
     private static List<GTRecipe> expandPreferredRecipeVariants(GTRecipe recipe, boolean unwrapNACComponents) {
@@ -815,6 +1133,7 @@ public class MiracleTopRecipePool {
             return Collections.singletonList(recipe);
         }
 
+        // Build a cartesian product of remaining alternatives after ranking circuit-part choices.
         List<List<ItemStack>> choiceList = new ArrayList<>();
         for (int i = 0; i < recipe.mInputs.length; i++) {
             if (i < recipeWithAlt.mOreDictAlt.length && recipeWithAlt.mOreDictAlt[i] != null
@@ -830,6 +1149,7 @@ public class MiracleTopRecipePool {
         int totalSlots = choiceList.size();
         int[] indexArray = new int[totalSlots];
 
+        // Iterate the cartesian product without recursion to avoid deep call stacks on large alt lists.
         while (true) {
             ItemStack[] inputs = new ItemStack[totalSlots];
             for (int i = 0; i < totalSlots; i++) {
@@ -867,213 +1187,46 @@ public class MiracleTopRecipePool {
         return expandedRecipes;
     }
 
-    private static void appendNormalizedRecipeKey(StringBuilder key, ItemStack[] stacks) {
-        if (stacks == null) return;
-        ArrayList<String> normalizedTokens = new ArrayList<>(stacks.length);
-        for (ItemStack stack : stacks) {
-            if (stack == null) {
-                normalizedTokens.add("null;");
-                continue;
-            }
-            int rank = getCircuitPartTierRank(stack);
-            if (rank >= 0) {
-                normalizedTokens.add("circuitPartTier" + rank + 'x' + stack.stackSize + ';');
-            } else {
-                normalizedTokens.add(TST_ItemID.create(stack) + "x" + stack.stackSize + ';');
-            }
-        }
-        Collections.sort(normalizedTokens);
-        for (String token : normalizedTokens) {
-            key.append(token);
-        }
-    }
-
-    private static boolean isSameRecipeExceptCircuitParts(GTRecipe candidate, GTRecipe cachedRecipe) {
-        if (!areRecipeItemOutputsEquivalent(candidate.mOutputs, cachedRecipe.mOutputs)) return false;
-        if (!areRecipeFluidInputsEqual(candidate.mFluidInputs, cachedRecipe.mFluidInputs)) return false;
-        return buildRecipeComparableKey(candidate.mInputs).equals(buildRecipeComparableKey(cachedRecipe.mInputs));
-    }
-
-    private static String buildRecipeComparableKey(ItemStack[] stacks) {
-        if (stacks == null) return "";
-
-        ArrayList<String> exactTokens = new ArrayList<>(stacks.length);
-
-        for (ItemStack stack : stacks) {
-            if (stack == null) continue;
-
-            int family = getCircuitPartVariantFamily(stack);
-            int rank = getCircuitPartTierRank(stack);
-            if (family >= 0 && rank >= 0) {
-                continue;
-            } else {
-                exactTokens.add(buildRecipeExactToken(stack));
-            }
-        }
-
-        Collections.sort(exactTokens);
-        StringBuilder key = new StringBuilder();
-        for (String token : exactTokens) {
-            key.append(token);
-        }
-        return key.toString();
-    }
-
-    private static boolean areRecipeItemOutputsEquivalent(ItemStack[] a, ItemStack[] b) {
-        if (a == b) return true;
-        List<ItemStack> normalizedA = compactStacks(a);
-        List<ItemStack> normalizedB = compactStacks(b);
-        if (normalizedA.size() != normalizedB.size()) return false;
-        for (int i = 0; i < normalizedA.size(); i++) {
-            if (!areRecipeStacksEquivalent(normalizedA.get(i), normalizedB.get(i))) return false;
-        }
-        return true;
-    }
-
-    private static boolean areRecipeStacksEquivalent(ItemStack a, ItemStack b) {
-        if (a == b) return true;
-        if (a == null || b == null) return false;
-        return Objects.equals(TST_ItemID.createNoNBT(a), TST_ItemID.createNoNBT(b)) && a.stackSize == b.stackSize;
-    }
-
-    private static String buildRecipeExactToken(ItemStack stack) {
-        // CA source recipes sometimes differ only by transient NBT or IC damage while still representing the same
-        // material recipe. Ignore those markers here so variant recipes collapse before ModifyRecipe runs.
-        if (stack.getItem() == ItemList.Circuit_Integrated.getItem()) {
-            return "integratedCircuitx" + stack.stackSize + ';';
-        }
-        return TST_ItemID.createNoNBT(stack) + "x" + stack.stackSize + ';';
-    }
-
-    private static List<ItemStack> compactStacks(ItemStack[] stacks) {
-        if (stacks == null || stacks.length == 0) return Collections.emptyList();
-        ArrayList<ItemStack> normalized = new ArrayList<>(stacks.length);
-        for (ItemStack stack : stacks) {
-            if (stack != null) normalized.add(stack);
-        }
-        return normalized;
-    }
-
-    private static boolean areRecipeFluidInputsEqual(FluidStack[] a, FluidStack[] b) {
-        if (a == b) return true;
-        List<FluidStack> normalizedA = compactFluidStacks(a);
-        List<FluidStack> normalizedB = compactFluidStacks(b);
-        if (normalizedA.size() != normalizedB.size()) return false;
-        for (int i = 0; i < normalizedA.size(); i++) {
-            FluidStack fluidA = normalizedA.get(i);
-            FluidStack fluidB = normalizedB.get(i);
-            if (fluidA == fluidB) continue;
-            if (fluidA == null || fluidB == null || !fluidA.isFluidEqual(fluidB) || fluidA.amount != fluidB.amount) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static List<FluidStack> compactFluidStacks(FluidStack[] stacks) {
-        if (stacks == null || stacks.length == 0) return Collections.emptyList();
-        ArrayList<FluidStack> normalized = new ArrayList<>(stacks.length);
-        for (FluidStack stack : stacks) {
-            if (stack != null) normalized.add(stack);
-        }
-        return normalized;
-    }
-
-    private static void appendSortedFluidStackKey(StringBuilder key, FluidStack[] stacks) {
-        if (stacks == null || stacks.length == 0) return;
-        ArrayList<String> tokens = new ArrayList<>(stacks.length);
-        for (FluidStack stack : stacks) {
-            if (stack == null) continue;
-            tokens.add(
-                stack.getFluid()
-                    .getName() + "x"
-                    + stack.amount
-                    + ';');
-        }
-        Collections.sort(tokens);
-        for (String token : tokens) {
-            key.append(token);
-        }
-    }
-
-    private static boolean isPreferredVariantRecipe(GTRecipe candidate, GTRecipe cachedRecipe) {
-        int[] candidateCounts = getCircuitPartTierCounts(candidate.mInputs);
-        int[] cachedCounts = getCircuitPartTierCounts(cachedRecipe.mInputs);
-        for (int rank = candidateCounts.length - 1; rank >= 0; rank--) {
-            if (candidateCounts[rank] != cachedCounts[rank]) return candidateCounts[rank] > cachedCounts[rank];
-        }
-        return getCircuitPartVariantScore(candidate.mInputs) > getCircuitPartVariantScore(cachedRecipe.mInputs);
-    }
-
-    private static int[] getCircuitPartTierCounts(ItemStack[] stacks) {
-        int[] counts = new int[3];
-        if (stacks == null) return counts;
-
-        for (ItemStack stack : stacks) {
-            int rank = getCircuitPartTierRank(stack);
-            if (rank >= 0 && rank < counts.length) {
-                counts[rank] += stack.stackSize;
-            }
-        }
-        return counts;
-    }
-
-    private static int getCircuitPartVariantScore(ItemStack[] stacks) {
-        if (stacks == null) return -1;
-        int score = 0;
-        for (ItemStack stack : stacks) {
-            int rank = getCircuitPartTierRank(stack);
-            if (rank >= 0) score += rank + 1;
-        }
-        return score;
-    }
-
-    private static int getCircuitPartVariantFamily(ItemStack stack) {
-        return getCircuitPartInfo(stack)[0];
-    }
-
-    private static boolean isSuperconductorChoice(ItemStack stack) {
-        if (!BWUtil.checkStackAndPrefix(stack)) return false;
-        ItemData data = GTOreDictUnificator.getAssociation(stack);
-        return data != null && superConductorMaterialList.contains(data.mMaterial.mMaterial);
-    }
-
-    private static int getCircuitPartTierRank(ItemStack stack) {
-        return getCircuitPartInfo(stack)[1];
-    }
-
-    private static int[] getCircuitPartInfo(ItemStack stack) {
-        if (stack == null) return new int[] { -1, -1 };
-
+    private static CircuitItemVariant getCircuitItemVariant(ItemStack stack) {
+        if (stack == null) return null;
         TST_ItemID id = TST_ItemID.createNoNBT(stack);
-        for (int family = 0; family < circuitPartVariants.length; family++) {
-            for (int tier = 0; tier < circuitPartVariants[family].length; tier++) {
-                if (matchesCircuitPartVariant(id, family, tier)) {
-                    return new int[] { family, tier };
-                }
+        for (CircuitItemVariant variant : circuitItems) {
+            if (id.equals(TST_ItemID.createNoNBT(variant.original))
+                || id.equals(TST_ItemID.createNoNBT(variant.wrapped.get(1)))) {
+                return variant;
             }
         }
-        return new int[] { -1, -1 };
+        return null;
     }
 
-    private static boolean matchesCircuitPartVariant(TST_ItemID id, int family, int tier) {
-        return id.equals(TST_ItemID.createNoNBT(circuitPartVariants[family][tier].get(1)))
-            || id.equals(TST_ItemID.createNoNBT(wrappedCircuitPartVariants[family][tier].get(1)));
+    private static ItemStack unwrapWrappedCircuitComponent(ItemStack stack) {
+        if (stack == null) return null;
+        for (CircuitItemVariant variant : circuitItems) {
+            if (GTUtility.areStacksEqual(variant.wrapped.get(1), stack)) {
+                return copyAmountUnsafe(stack.stackSize, variant.original);
+            }
+        }
+        for (Map.Entry<ItemStack, ItemStack> entry : circuitItemsToWrapped.entrySet()) {
+            if (GTUtility.areStacksEqual(entry.getValue(), stack)) {
+                return copyAmountUnsafe(stack.stackSize, entry.getKey());
+            }
+        }
+        return stack;
     }
 
-    @Desugar
-    private record NACUnwrapResult(ItemStack[] itemInputs, FluidStack[] fluidInputs, int extraDuration) {
-
-        private static NACUnwrapResult empty() {
-            return new NACUnwrapResult(new ItemStack[0], new FluidStack[0], 0);
+    private static ItemStack wrapCircuitComponent(ItemStack stack) {
+        if (stack == null) return null;
+        for (CircuitItemVariant variant : circuitItems) {
+            if (GTUtility.areStacksEqual(variant.original, stack)) {
+                return variant.wrapped.get(1);
+            }
         }
-
-        private static NACUnwrapResult of(ItemStack stack) {
-            return new NACUnwrapResult(
-                stack == null ? new ItemStack[0] : new ItemStack[] { stack },
-                new FluidStack[0],
-                0);
+        for (Map.Entry<ItemStack, ItemStack> entry : circuitItemsToWrapped.entrySet()) {
+            if (GTUtility.areStacksEqual(entry.getKey(), stack)) {
+                return entry.getValue();
+            }
         }
+        return null;
     }
 
     private static void addGTCircuitOreDictNames(ItemStack stack) {
@@ -1097,148 +1250,138 @@ public class MiracleTopRecipePool {
     }
 
     private static void initStatics() {
-        circuitPartVariants = new ItemList[][] {
-            { ItemList.Circuit_Parts_ResistorSMD, ItemList.Circuit_Parts_ResistorASMD,
-                ItemList.Circuit_Parts_ResistorXSMD },
-            { ItemList.Circuit_Parts_DiodeSMD, ItemList.Circuit_Parts_DiodeASMD, ItemList.Circuit_Parts_DiodeXSMD },
-            { ItemList.Circuit_Parts_TransistorSMD, ItemList.Circuit_Parts_TransistorASMD,
-                ItemList.Circuit_Parts_TransistorXSMD },
-            { ItemList.Circuit_Parts_CapacitorSMD, ItemList.Circuit_Parts_CapacitorASMD,
-                ItemList.Circuit_Parts_CapacitorXSMD },
-            { ItemList.Circuit_Parts_InductorSMD, ItemList.Circuit_Parts_InductorASMD,
-                ItemList.Circuit_Parts_InductorXSMD } };
-        wrappedCircuitPartVariants = new WrappedCircuitItem[][] {
-            { WrappedCircuitItem.Wrapped_Circuit_Parts_ResistorSMD,
-                WrappedCircuitItem.Wrapped_Circuit_Parts_ResistorASMD,
-                WrappedCircuitItem.Wrapped_Circuit_Parts_ResistorXSMD },
-            { WrappedCircuitItem.Wrapped_Circuit_Parts_DiodeSMD, WrappedCircuitItem.Wrapped_Circuit_Parts_DiodeASMD,
-                WrappedCircuitItem.Wrapped_Circuit_Parts_DiodeXSMD },
-            { WrappedCircuitItem.Wrapped_Circuit_Parts_TransistorSMD,
-                WrappedCircuitItem.Wrapped_Circuit_Parts_TransistorASMD,
-                WrappedCircuitItem.Wrapped_Circuit_Parts_TransistorXSMD },
-            { WrappedCircuitItem.Wrapped_Circuit_Parts_CapacitorSMD,
-                WrappedCircuitItem.Wrapped_Circuit_Parts_CapacitorASMD,
-                WrappedCircuitItem.Wrapped_Circuit_Parts_CapacitorXSMD },
-            { WrappedCircuitItem.Wrapped_Circuit_Parts_InductorSMD,
-                WrappedCircuitItem.Wrapped_Circuit_Parts_InductorASMD,
-                WrappedCircuitItem.Wrapped_Circuit_Parts_InductorXSMD } };
+        NAC_UNWRAP_RECIPE_MAPS = new RecipeMap<?>[] { RecipeMaps.nanochipSMDProcessorRecipes,
+            RecipeMaps.nanochipBoardProcessorRecipes, RecipeMaps.nanochipEtchingArray,
+            RecipeMaps.nanochipCuttingChamber, RecipeMaps.nanochipWireTracer, RecipeMaps.nanochipSuperconductorSplitter,
+            RecipeMaps.nanochipOpticalOrganizer, RecipeMaps.nanochipEncasementWrapper,
+            RecipeMaps.nanochipBiologicalCoordinator };
 
-        /**
-         * init Wrap circuit parts
-         */
         // spotless:off
-        ItemStack[] CircuitParts = new ItemStack[]{
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.ULV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.LV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.MV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.HV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.EV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.IV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.LuV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.ZPM, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UHV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UEV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UIV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UMV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UXV, 1),
-            GTOreDictUnificator.get(OrePrefixes.circuit, Materials.MAX, 1),
-            ItemList.Circuit_Parts_Crystal_Chip_Elite.get(1),
-            ItemList.Circuit_Parts_Crystal_Chip_Master.get(1),
-            ItemList.Circuit_Board_Coated.get(1),
-            ItemList.Circuit_Board_Coated_Basic.get(1),
-            ItemList.Circuit_Board_Phenolic.get(1),
-            ItemList.Circuit_Board_Phenolic_Good.get(1),
-            ItemList.Circuit_Board_Epoxy.get(1),
-            ItemList.Circuit_Board_Epoxy_Advanced.get(1),
-            ItemList.Circuit_Board_Fiberglass.get(1),
-            ItemList.Circuit_Board_Fiberglass_Advanced.get(1),
-            ItemList.Circuit_Board_Multifiberglass_Elite.get(1),
-            ItemList.Circuit_Board_Multifiberglass.get(1),
-            ItemList.Circuit_Board_Wetware.get(1),
-            ItemList.Circuit_Board_Wetware_Extreme.get(1),
-            ItemList.Circuit_Board_Plastic.get(1),
-            ItemList.Circuit_Board_Plastic_Advanced.get(1),
-            ItemList.Circuit_Board_Bio.get(1),
-            ItemList.Circuit_Board_Bio_Ultra.get(1),
-            ItemList.Circuit_Parts_ResistorSMD.get(1),
-            ItemList.Circuit_Parts_InductorSMD.get(1),
-            ItemList.Circuit_Parts_DiodeSMD.get(1),
-            ItemList.Circuit_Parts_TransistorSMD.get(1),
-            ItemList.Circuit_Parts_CapacitorSMD.get(1),
-            ItemList.Circuit_Parts_ResistorASMD.get(1),
-            ItemList.Circuit_Parts_DiodeASMD.get(1),
-            ItemList.Circuit_Parts_TransistorASMD.get(1),
-            ItemList.Circuit_Parts_CapacitorASMD.get(1),
-            ItemList.Circuit_Chip_ILC.get(1),
-            ItemList.Circuit_Chip_Ram.get(1),
-            ItemList.Circuit_Chip_NAND.get(1),
-            ItemList.Circuit_Chip_NOR.get(1),
-            ItemList.Circuit_Chip_CPU.get(1),
-            ItemList.Circuit_Chip_SoC.get(1),
-            ItemList.Circuit_Chip_SoC2.get(1),
-            ItemList.Circuit_Chip_PIC.get(1),
-            ItemList.Circuit_Chip_Simple_SoC.get(1),
-            ItemList.Circuit_Chip_HPIC.get(1),
-            ItemList.Circuit_Chip_UHPIC.get(1),
-            ItemList.Circuit_Chip_ULPIC.get(1),
-            ItemList.Circuit_Chip_LPIC.get(1),
-            ItemList.Circuit_Chip_NPIC.get(1),
-            ItemList.Circuit_Chip_PPIC.get(1),
-            ItemList.Circuit_Chip_QPIC.get(1),
-            ItemList.Circuit_Chip_NanoCPU.get(1),
-            ItemList.Circuit_Chip_QuantumCPU.get(1),
-            ItemList.Circuit_Chip_CrystalCPU.get(1),
-            ItemList.Circuit_Chip_CrystalSoC.get(1),
-            ItemList.Circuit_Chip_CrystalSoC2.get(1),
-            ItemList.Circuit_Chip_NeuroCPU.get(1),
-            ItemList.Circuit_Chip_BioCPU.get(1),
-            ItemList.Circuit_Chip_Stemcell.get(1),
-            ItemList.Circuit_Chip_Biocell.get(1),
-            ItemList.Circuit_Parts_ResistorXSMD.get(1),
-            ItemList.Circuit_Parts_DiodeXSMD.get(1),
-            ItemList.Circuit_Parts_TransistorXSMD.get(1),
-            ItemList.Circuit_Parts_CapacitorXSMD.get(1),
-            ItemList.Circuit_Parts_InductorASMD.get(1),
-            ItemList.Circuit_Parts_InductorXSMD.get(1),
-            ItemList.Circuit_Chip_Optical.get(1),
-            ItemList.Circuit_Board_Optical.get(1),
-            ItemList.Optically_Perfected_CPU.get(1),
-            ItemList.Optical_Cpu_Containment_Housing.get(1),
-            ItemList.Optically_Compatible_Memory.get(1),
-            ItemList.Circuit_Parts_Crystal_Chip_Wetware.get(1),
-            ItemList.Circuit_Parts_Chip_Bioware.get(1)};
 
-        int Count = 0;
-        for (WrappedCircuitItem item : WrappedCircuitItem.values()) {
-            if (Count < 15) {
-                item.set(getModItem("GoodGenerator", "circuitWrap", 1, Count));
-            } else {
-                item.set(getModItem("bartworks", "gt.bwMetaGeneratedItem0", 1, 32778 - Count));
-            }
-            if (CircuitParts[Count] != null && item.get(1) != null) {
-                circuitItemsToWrapped.put(CircuitParts[Count], item.get(1));
-            } else circuitItemsToWrapped.put(GTCMItemList.TestItem0.get(1), GTCMItemList.TestItem0.get(1));
-            Count++;
-        }
+        // One ordered source drives both tier comparison and wrapped-item lookup.
+        circuitItems = new CircuitItemVariant[] {
+            // GT circuit ore-dict tiers are wrapped, but they are not compared by this selection logic.
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.ULV, 1), WrappedCircuitItem.Wrapped_Circuit_ULV, CircuitItemGroup.NONE, 0),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.LV, 1), WrappedCircuitItem.Wrapped_Circuit_LV, CircuitItemGroup.NONE, 1),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.MV, 1), WrappedCircuitItem.Wrapped_Circuit_MV, CircuitItemGroup.NONE, 2),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.HV, 1), WrappedCircuitItem.Wrapped_Circuit_HV, CircuitItemGroup.NONE, 3),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.EV, 1), WrappedCircuitItem.Wrapped_Circuit_EV, CircuitItemGroup.NONE, 4),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.IV, 1), WrappedCircuitItem.Wrapped_Circuit_IV, CircuitItemGroup.NONE, 5),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.LuV, 1), WrappedCircuitItem.Wrapped_Circuit_LuV, CircuitItemGroup.NONE, 6),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.ZPM, 1), WrappedCircuitItem.Wrapped_Circuit_ZPM, CircuitItemGroup.NONE, 7),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UV, 1), WrappedCircuitItem.Wrapped_Circuit_UV, CircuitItemGroup.NONE, 8),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UHV, 1), WrappedCircuitItem.Wrapped_Circuit_UHV, CircuitItemGroup.NONE, 9),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UEV, 1), WrappedCircuitItem.Wrapped_Circuit_UEV, CircuitItemGroup.NONE, 10),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UIV, 1), WrappedCircuitItem.Wrapped_Circuit_UIV, CircuitItemGroup.NONE, 11),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UMV, 1), WrappedCircuitItem.Wrapped_Circuit_UMV, CircuitItemGroup.NONE, 12),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.UXV, 1), WrappedCircuitItem.Wrapped_Circuit_UXV, CircuitItemGroup.NONE, 13),
+            new CircuitItemVariant(GTOreDictUnificator.get(OrePrefixes.circuit, Materials.MAX, 1), WrappedCircuitItem.Wrapped_Circuit_MAX, CircuitItemGroup.NONE, 14),
 
-        circuitItemsToWrapped.put(ItemList.Circuit_Parts_Resistor.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_ResistorSMD.get(1));
-        circuitItemsToWrapped.put(ItemList.Circuit_Parts_Coil.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_InductorSMD.get(1));
-        circuitItemsToWrapped.put(ItemList.Circuit_Parts_Diode.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_DiodeSMD.get(1));
-        circuitItemsToWrapped.put(ItemList.Circuit_Parts_Transistor.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_TransistorSMD.get(1));
-        circuitItemsToWrapped.put(ItemList.Circuit_Parts_Capacitor.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_CapacitorSMD.get(1));
-        circuitItemsToWrapped.put(ItemList.Circuit_OpticalMainframe.get(1), WrappedCircuitItem.Wrapped_Circuit_UIV.get(1));     // TODO Only for Piko
-        circuitItemsToWrapped.put(NHItemList.PikoCircuit.get(1), WrappedCircuitItem.Wrapped_Circuit_UMV.get(1));
-        circuitItemsToWrapped.put(NHItemList.QuantumCircuit.get(1), WrappedCircuitItem.Wrapped_Circuit_UXV.get(1));
+            // Board rank must follow the real progression order used by recipe selection.
+            new CircuitItemVariant(ItemList.Circuit_Board_Coated_Basic.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Coated_Basic, CircuitItemGroup.BOARD, 0),
+            new CircuitItemVariant(ItemList.Circuit_Board_Phenolic_Good.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Phenolic_Good, CircuitItemGroup.BOARD, 1),
+            new CircuitItemVariant(ItemList.Circuit_Board_Plastic_Advanced.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Plastic_Advanced, CircuitItemGroup.BOARD, 2),
+            new CircuitItemVariant(ItemList.Circuit_Board_Epoxy_Advanced.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Epoxy_Advanced, CircuitItemGroup.BOARD, 3),
+            new CircuitItemVariant(ItemList.Circuit_Board_Fiberglass_Advanced.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Fiberglass_Advanced, CircuitItemGroup.BOARD, 4),
+            new CircuitItemVariant(ItemList.Circuit_Board_Multifiberglass_Elite.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Multifiberglass_Elite, CircuitItemGroup.BOARD, 5),
+            new CircuitItemVariant(ItemList.Circuit_Board_Wetware_Extreme.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Wetware_Extreme, CircuitItemGroup.BOARD, 6),
+            new CircuitItemVariant(ItemList.Circuit_Board_Bio_Ultra.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Bio_Ultra, CircuitItemGroup.BOARD, 7),
+            new CircuitItemVariant(ItemList.Circuit_Board_Optical.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Optical, CircuitItemGroup.BOARD, 8),
+
+            // Legacy boards and special chips are only wrapped/unwrapped; they do not define tier preference.
+            new CircuitItemVariant(ItemList.Circuit_Parts_Crystal_Chip_Elite.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_Crystal_Chip_Elite, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Parts_Crystal_Chip_Master.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_Crystal_Chip_Master, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Board_Coated.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Coated, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Board_Phenolic.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Phenolic, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Board_Epoxy.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Epoxy, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Board_Fiberglass.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Fiberglass, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Board_Multifiberglass.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Multifiberglass, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Board_Wetware.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Wetware, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Board_Plastic.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Plastic, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Board_Bio.get(1), WrappedCircuitItem.Wrapped_Circuit_Board_Bio, CircuitItemGroup.NONE),
+
+            // Ranked basic circuit components. Higher tier entries replace lower tier variants during selection.
+            new CircuitItemVariant(ItemList.Circuit_Parts_ResistorSMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_ResistorSMD, CircuitItemGroup.RESISTOR, 0),
+            new CircuitItemVariant(ItemList.Circuit_Parts_ResistorASMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_ResistorASMD, CircuitItemGroup.RESISTOR, 1),
+            new CircuitItemVariant(ItemList.Circuit_Parts_ResistorXSMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_ResistorXSMD, CircuitItemGroup.RESISTOR, 2),
+            new CircuitItemVariant(ItemList.Circuit_Parts_DiodeSMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_DiodeSMD, CircuitItemGroup.DIODE, 0),
+            new CircuitItemVariant(ItemList.Circuit_Parts_DiodeASMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_DiodeASMD, CircuitItemGroup.DIODE, 1),
+            new CircuitItemVariant(ItemList.Circuit_Parts_DiodeXSMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_DiodeXSMD, CircuitItemGroup.DIODE, 2),
+            new CircuitItemVariant(ItemList.Circuit_Parts_TransistorSMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_TransistorSMD, CircuitItemGroup.TRANSISTOR, 0),
+            new CircuitItemVariant(ItemList.Circuit_Parts_TransistorASMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_TransistorASMD, CircuitItemGroup.TRANSISTOR, 1),
+            new CircuitItemVariant(ItemList.Circuit_Parts_TransistorXSMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_TransistorXSMD, CircuitItemGroup.TRANSISTOR, 2),
+            new CircuitItemVariant(ItemList.Circuit_Parts_CapacitorSMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_CapacitorSMD, CircuitItemGroup.CAPACITOR, 0),
+            new CircuitItemVariant(ItemList.Circuit_Parts_CapacitorASMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_CapacitorASMD, CircuitItemGroup.CAPACITOR, 1),
+            new CircuitItemVariant(ItemList.Circuit_Parts_CapacitorXSMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_CapacitorXSMD, CircuitItemGroup.CAPACITOR, 2),
+            new CircuitItemVariant(ItemList.Circuit_Parts_InductorSMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_InductorSMD, CircuitItemGroup.INDUCTOR, 0),
+            new CircuitItemVariant(ItemList.Circuit_Parts_InductorASMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_InductorASMD, CircuitItemGroup.INDUCTOR, 1),
+            new CircuitItemVariant(ItemList.Circuit_Parts_InductorXSMD.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_InductorXSMD, CircuitItemGroup.INDUCTOR, 2),
+
+            // Advanced IC-like inputs are preserved as exact wrapped mappings, not ranked alternatives.
+            new CircuitItemVariant(ItemList.Circuit_Chip_ILC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_ILC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_Ram.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_Ram, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_NAND.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_NAND, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_NOR.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_NOR, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_CPU.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_CPU, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_SoC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_SoC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_SoC2.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_SoC2, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_PIC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_PIC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_Simple_SoC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_Simple_SoC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_HPIC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_HPIC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_UHPIC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_UHPIC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_ULPIC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_ULPIC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_LPIC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_LPIC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_NPIC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_NPIC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_PPIC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_PPIC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_QPIC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_QPIC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_NanoCPU.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_NanoCPU, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_QuantumCPU.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_QuantumCPU, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_CrystalCPU.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_CrystalCPU, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_CrystalSoC.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_CrystalSoC, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_CrystalSoC2.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_CrystalSoC2, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_NeuroCPU.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_NeuroCPU, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_BioCPU.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_BioCPU, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_Stemcell.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_Stemcell, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_Biocell.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_Biocell, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Parts_Crystal_Chip_Wetware.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_Crystal_Chip_Wetware, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Parts_Chip_Bioware.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_Chip_Bioware, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Circuit_Chip_Optical.get(1), WrappedCircuitItem.Wrapped_Circuit_Chip_Optical, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Optically_Perfected_CPU.get(1), WrappedCircuitItem.Wrapped_Optically_Perfected_CPU, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Optical_Cpu_Containment_Housing.get(1), WrappedCircuitItem.Wrapped_Optical_Cpu_Containment_Housing, CircuitItemGroup.NONE),
+            new CircuitItemVariant(ItemList.Optically_Compatible_Memory.get(1), WrappedCircuitItem.Wrapped_Optically_Compatible_Memory, CircuitItemGroup.NONE),
+
+            // Plain components map to their SMD wrapped forms so old recipes share the same path.
+            new CircuitItemVariant(ItemList.Circuit_Parts_Resistor.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_ResistorSMD, CircuitItemGroup.RESISTOR, 0),
+            new CircuitItemVariant(ItemList.Circuit_Parts_Coil.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_InductorSMD, CircuitItemGroup.INDUCTOR, 0),
+            new CircuitItemVariant(ItemList.Circuit_Parts_Diode.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_DiodeSMD, CircuitItemGroup.DIODE, 0),
+            new CircuitItemVariant(ItemList.Circuit_Parts_Transistor.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_TransistorSMD, CircuitItemGroup.TRANSISTOR, 0),
+            new CircuitItemVariant(ItemList.Circuit_Parts_Capacitor.get(1), WrappedCircuitItem.Wrapped_Circuit_Parts_CapacitorSMD, CircuitItemGroup.CAPACITOR, 0),
+
+            // These custom circuits reuse existing wrapped circuit tiers for NAC/Piko/Quantum compatibility.
+            new CircuitItemVariant(ItemList.Circuit_OpticalMainframe.get(1), WrappedCircuitItem.Wrapped_Circuit_UIV, CircuitItemGroup.NONE, 11),
+            new CircuitItemVariant(NHItemList.PikoCircuit.get(1), WrappedCircuitItem.Wrapped_Circuit_UMV, CircuitItemGroup.NONE, 12),
+            new CircuitItemVariant(NHItemList.QuantumCircuit.get(1), WrappedCircuitItem.Wrapped_Circuit_UXV, CircuitItemGroup.NONE, 13) };
+
         // spotless:on
 
-        /**
-         * init GTPP Material Map
-         */
-        // Set<Material> generateMaterialList =new HashSet<>();
-        // generateMaterialList.add(MaterialsElements.STANDALONE.CHRONOMATIC_GLASS);
-        // generateMaterialList.add(MaterialsAlloy.QUANTUM);
+        int count = 0;
+        for (WrappedCircuitItem item : WrappedCircuitItem.values()) {
+            if (count < 15) {
+                item.set(getModItem("GoodGenerator", "circuitWrap", 1, count));
+            } else {
+                item.set(getModItem("bartworks", "gt.bwMetaGeneratedItem0", 1, 32778 - count));
+            }
+            count++;
+        }
 
+        circuitItemsToWrapped.clear();
+        for (CircuitItemVariant item : circuitItems) {
+            if (item.original != null && item.wrapped.get(1) != null) {
+                circuitItemsToWrapped.put(item.original, item.wrapped.get(1));
+            }
+        }
+
+        // init GTPP Material Map
         for (Map.Entry<String, Map<String, ItemStack>> outerEntry : mComponentMap.entrySet()) {
             String materialName = outerEntry.getKey();
             Map<String, ItemStack> innerMap = outerEntry.getValue();
@@ -1962,5 +2105,5 @@ public class MiracleTopRecipePool {
             this.itemStack = itemStack;
         }
     }
+    // spotless:on
 }
-// spotless:on
