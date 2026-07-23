@@ -1,10 +1,5 @@
 package com.Nxer.TwistSpaceTechnology.common.material;
 
-import static gregtech.api.util.GTLanguageManager.addStringLocalization;
-
-import java.util.Locale;
-
-import cpw.mods.fml.common.FMLCommonHandler;
 import goodgenerator.util.CharExchanger;
 import gregtech.api.enums.Dyes;
 import gregtech.api.enums.Element;
@@ -36,6 +31,9 @@ public class MaterialsTST implements IMaterialHandler {
 
     @Override
     public void onMaterialsInit() {
+        // #tr Material.neutroniumalloy
+        // # Neutronium Alloy
+        // #zh_CN 中子合金
         NeutroniumAlloy = withMetaItemSubID(
             new MaterialBuilder().setName("NeutroniumAlloy")
                 .setDefaultLocalName("Neutronium Alloy")
@@ -63,6 +61,9 @@ public class MaterialsTST implements IMaterialHandler {
                 .setProcessingMaterialTierEU(TierEU.RECIPE_UEV),
             offsetID);
 
+        // #tr Material.axonisalloy
+        // # Axonis Alloy
+        // #zh_CN 灵韵合金
         AxonisAlloy = withMetaItemSubID(
             new MaterialBuilder().setName("AxonisAlloy")
                 .setDefaultLocalName("Axonis Alloy")
@@ -88,6 +89,9 @@ public class MaterialsTST implements IMaterialHandler {
                 .setProcessingMaterialTierEU(TierEU.RECIPE_UIV),
             offsetID + 1);
 
+        // #tr Material.axonium
+        // # Axonium
+        // #zh_CN 焕律璨金
         Axonium = withMetaItemSubID(
             new MaterialBuilder().setName("Axonium")
                 .setDefaultLocalName("Axonium")
@@ -117,6 +121,9 @@ public class MaterialsTST implements IMaterialHandler {
                 .setProcessingMaterialTierEU(TierEU.RECIPE_UMV),
             offsetID + 2);
 
+        // #tr Material.dubnium
+        // # Dubnium
+        // #zh_CN 钅杜
         Dubnium = withMetaItemSubID(
             new MaterialBuilder().setName("Dubnium")
                 .setDefaultLocalName("Dubnium")
@@ -142,8 +149,6 @@ public class MaterialsTST implements IMaterialHandler {
 
         OrePrefixes.nanite.mGeneratedItems.add(Materials.CosmicNeutronium);
         OrePrefixes.nanite.mGeneratedItems.add(MaterialsTST.Axonium);
-
-        initGTMaterialLocalizations();
     }
 
     private static Materials withMetaItemSubID(Materials material, int metaItemSubID) {
@@ -160,34 +165,6 @@ public class MaterialsTST implements IMaterialHandler {
             Materials.add(new MaterialsTST());
             registered = true;
         }
-    }
-
-    private static void initGTMaterialLocalizations() {
-        if (!isZhCN()) return;
-
-        addGTMaterialLocalization(NeutroniumAlloy, "中子合金");
-        addGTMaterialLocalization(AxonisAlloy, "灵韵合金");
-        addGTMaterialLocalization(Axonium, "焕律璨金");
-        addGTMaterialLocalization(Dubnium, "钅杜");
-
-        addStringLocalization("tst.blockcasings.multi.32767.name", "任意本方块的子方块");
-        addStringLocalization("tst.blockmetal01.0.name", "%material块");
-        addStringLocalization("tst.blockmetal01.1.name", "%material块");
-        addStringLocalization("tst.blockmetal01.2.name", "%material块");
-        addStringLocalization("tst.blockmetal01.3.name", "%material块");
-        addStringLocalization("tst.blockmetal01.32767.name", "任意本方块的子方块");
-    }
-
-    private static void addGTMaterialLocalization(Materials material, String localizedName) {
-        addStringLocalization(material.getLocalizedNameKey(), localizedName);
-        addStringLocalization("fluid.molten." + material.mName.toLowerCase(Locale.ENGLISH), "熔融" + localizedName);
-        addStringLocalization("fluid.plasma." + material.mName.toLowerCase(Locale.ENGLISH), localizedName + "等离子体");
-    }
-
-    private static boolean isZhCN() {
-        return FMLCommonHandler.instance()
-            .getCurrentLanguage()
-            .equals("zh_CN");
     }
 
 }
