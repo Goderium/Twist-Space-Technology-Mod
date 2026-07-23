@@ -575,12 +575,7 @@ public class Config {
         Configuration configuration = new Configuration(configFile);
 
         // region Version
-        // LanguageManager owns the refresh logic; Config only creates and reads the persisted version marker.
-        CurrentVersion = configuration.getString(
-            KEY_CURRENT_VERSION,
-            VERSION,
-            CurrentVersion,
-            "Last Twist Space Technology version that refreshed GregTech.lang.");
+        synchronizeVersionConfiguration(configuration);
         // endregion
 
         // region General
@@ -1000,6 +995,23 @@ public class Config {
         if (configuration.hasChanged()) {
             configuration.save();
         }
+    }
+
+    public static void synchronizeVersionConfiguration(File configFile) {
+        Configuration configuration = new Configuration(configFile);
+        synchronizeVersionConfiguration(configuration);
+        if (configuration.hasChanged()) {
+            configuration.save();
+        }
+    }
+
+    private static void synchronizeVersionConfiguration(Configuration configuration) {
+        // LanguageManager owns the refresh logic; Config only creates and reads the persisted version marker.
+        CurrentVersion = configuration.getString(
+            KEY_CURRENT_VERSION,
+            VERSION,
+            CurrentVersion,
+            "Last Twist Space Technology version and language that refreshed GregTech material localizations.");
     }
 }
 // spotless:on
