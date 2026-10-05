@@ -1,4 +1,6 @@
 jdk:
   - openjdk21
+env:
+  JAVA_OPTS: "-Dsun.java.launcher.diag=true"
 before_install:
   - ./gradlew setupCIWorkspace
